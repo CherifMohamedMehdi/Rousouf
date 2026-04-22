@@ -31,7 +31,8 @@ services:
       - meili_data:/meili_data
 
   directus:
-    image: directus/directus:11
+    # Pin 10.x: seed script uses role-based `/permissions` (Directus 11+ uses policies).
+    image: directus/directus:10.13.2
     container_name: roufouf-directus
     restart: unless-stopped
     depends_on:
@@ -51,7 +52,7 @@ services:
       DB_USER: roufouf
       DB_PASSWORD: roufouf-dev
 
-      ADMIN_EMAIL: admin@local.test
+      ADMIN_EMAIL: admin@example.com
       ADMIN_PASSWORD: roufouf-dev
 
       WEBSOCKETS_ENABLED: "true"

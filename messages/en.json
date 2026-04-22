@@ -96,6 +96,7 @@
     "documentType": "Document type",
     "governorates": "Governorates",
     "keywords": "Keywords",
+    "abstract": "Abstract",
     "files": "Files",
     "mainFile": "Full document",
     "executiveSummary": "Executive summary",
@@ -199,6 +200,7 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
+    "description": "About",
     "suggestCorrection": "Suggest a correction",
     "documentsHeading": "Documents by {org}",
     "empty": "No published documents from this organization yet."

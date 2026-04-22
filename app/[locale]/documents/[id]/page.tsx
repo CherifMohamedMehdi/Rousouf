@@ -24,13 +24,14 @@ import type { Metadata } from 'next';
 
 import { getDocumentById, getRelatedByOrganization, getRelatedByTheme } from '@/lib/directus/documents';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
-import { pickLabel, pickLocalizedAbstract, pickLocalizedName } from '@/lib/i18n/taxonomy';
+import { pickLabel, pickLocalizedAbstract, pickLocalizedName, suggestableAbstractField } from '@/lib/i18n/taxonomy';
 import { absoluteUrl, yearOf } from '@/lib/utils';
 import { documentJsonLd } from '@/lib/seo/jsonLd';
 import JsonLd from '@/components/seo/JsonLd';
 import Tag from '@/components/ui/Tag';
 import Badge from '@/components/ui/Badge';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
+import InlineFieldSuggestHeading from '@/components/documents/InlineFieldSuggestHeading';
 import PdfViewer from '@/components/documents/PdfViewer';
 import CitationBlock from '@/components/documents/CitationBlock';
 import ShareButtons from '@/components/documents/ShareButtons';
@@ -77,6 +78,7 @@ export default async function DocumentPage({
 
   const tDoc = await getTranslations('document');
   const abstract = pickLocalizedAbstract(doc, locale);
+  const abstractSuggest = suggestableAbstractField(doc, locale);
   const year = yearOf(doc.date_published);
   const mainFile = doc.files.find((f) => f.kind === 'main') ?? doc.files[0];
   const orgName = doc.organization ? pickLocalizedName(doc.organization, locale) : '';
@@ -153,14 +155,24 @@ export default async function DocumentPage({
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_320px]">
         {/* Main column ----------------------------------------------------- */}
         <div className="space-y-8">
-          {abstract ? (
-            <section>
-              <h2 className="sr-only">Abstract</h2>
-              <p className="rounded-xl bg-brand-paper-soft p-5 text-base leading-relaxed text-brand-ink">
-                {abstract}
-              </p>
-            </section>
-          ) : null}
+          <section aria-labelledby="doc-abstract-heading">
+            <h2 id="doc-abstract-heading" className="sr-only">
+              {tDoc('abstract')}
+            </h2>
+            <InlineFieldSuggestHeading
+              label={tDoc('abstract')}
+              targetType="document"
+              targetId={doc.id}
+              fieldName={abstractSuggest.fieldName}
+              fieldLabel={tDoc('abstract')}
+              currentValue={abstractSuggest.currentValue}
+            />
+            <p
+              className={`rounded-xl bg-brand-paper-soft p-5 text-base leading-relaxed ${abstract ? 'text-brand-ink' : 'italic text-brand-ink-soft'}`}
+            >
+              {abstract || '—'}
+            </p>
+          </section>
 
           {mainFile ? (
             <PdfViewer fileUrl={mainFile.file.url} filename={mainFile.file.filename} title={doc.title} />

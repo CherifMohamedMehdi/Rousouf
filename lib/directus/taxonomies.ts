@@ -1,10 +1,7 @@
 /**
  * Taxonomy data access.
- *
- * Server code imports these functions and never touches mock data or the
- * Directus SDK directly. Swapping to real Directus means replacing the
- * `return mock…` line inside `isMockMode()` with the matching SDK call.
  */
+import { getDirectusCatalog } from './catalog';
 import { isMockMode } from './client';
 import { mockDocumentTypes, mockGovernorates, mockLanguages, mockThemes } from '@/mocks/taxonomies';
 import type { DocumentType, Governorate, Language, Theme } from '@/types/directus';
@@ -20,24 +17,42 @@ function sortByOrder<T extends { sort_order?: number; name_en: string }>(list: T
 
 export async function getThemes(): Promise<Theme[]> {
   if (isMockMode()) return sortByOrder(mockThemes);
-  // const client = directus();
-  // return client.request(readItems('themes', { sort: ['sort_order', 'name_en'] }));
-  return sortByOrder(mockThemes);
+  try {
+    const { themes } = await getDirectusCatalog();
+    return sortByOrder([...themes.values()]);
+  } catch {
+    return sortByOrder(mockThemes);
+  }
 }
 
 export async function getDocumentTypes(): Promise<DocumentType[]> {
   if (isMockMode()) return sortByOrder(mockDocumentTypes);
-  return sortByOrder(mockDocumentTypes);
+  try {
+    const { documentTypes } = await getDirectusCatalog();
+    return sortByOrder([...documentTypes.values()]);
+  } catch {
+    return sortByOrder(mockDocumentTypes);
+  }
 }
 
 export async function getGovernorates(): Promise<Governorate[]> {
   if (isMockMode()) return sortByOrder(mockGovernorates);
-  return sortByOrder(mockGovernorates);
+  try {
+    const { governorates } = await getDirectusCatalog();
+    return sortByOrder([...governorates.values()]);
+  } catch {
+    return sortByOrder(mockGovernorates);
+  }
 }
 
 export async function getLanguages(): Promise<Language[]> {
   if (isMockMode()) return sortByOrder(mockLanguages);
-  return sortByOrder(mockLanguages);
+  try {
+    const { languages } = await getDirectusCatalog();
+    return sortByOrder([...languages.values()]);
+  } catch {
+    return sortByOrder(mockLanguages);
+  }
 }
 
 export async function getThemeBySlug(slug: string): Promise<Theme | null> {

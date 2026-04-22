@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { mockDonationTiers } from '../mocks/donationTiers';
 import { mockDocuments } from '../mocks/documents';
@@ -13,7 +15,7 @@ type DirectusItem = { id?: string | number } & Record<string, unknown>;
 const DIRECTUS_URL = process.env.DIRECTUS_URL ?? 'http://localhost:8055';
 const MEILI_URL = process.env.MEILISEARCH_HOST ?? 'http://localhost:7700';
 const MEILI_KEY = process.env.MEILISEARCH_KEY ?? 'roufouf-dev-master-key';
-const ADMIN_EMAIL = process.env.DIRECTUS_ADMIN_EMAIL ?? 'admin@local.test';
+const ADMIN_EMAIL = process.env.DIRECTUS_ADMIN_EMAIL ?? 'admin@example.com';
 const ADMIN_PASSWORD = process.env.DIRECTUS_ADMIN_PASSWORD ?? 'roufouf-dev';
 
 const COLLECTIONS: Array<{ name: string; icon?: string; singleton?: boolean }> = [
@@ -258,6 +260,55 @@ function basicTaxonomyFields(): Array<{ field: string; type: string }> {
   ];
 }
 
+/** UI meta for Directus fields (matches ensureField). */
+function directusFieldMeta(field: { field: string; type: string }) {
+  return {
+    interface:
+      field.type === 'text'
+        ? 'input-multiline'
+        : field.type === 'json'
+          ? 'input-code'
+          : 'input',
+    width: 'full' as const,
+  };
+}
+
+/**
+ * Fields embedded in POST /collections so the physical PK matches mock data.
+ * Without this, Directus creates a numeric auto-increment `id`, and POST /items with
+ * string ids returns 403 ("You don't have permission") instead of a clear type error.
+ */
+function buildEmbeddedCollectionFields(collectionName: string): Array<Record<string, unknown>> {
+  const defs = FIELD_DEFS[collectionName] ?? [];
+  return defs.map((field) => {
+    const meta = directusFieldMeta(field);
+    if (field.field === 'id') {
+      if (field.type === 'string') {
+        return {
+          field: field.field,
+          type: 'string',
+          schema: { is_primary_key: true, is_nullable: false, max_length: 255 },
+          meta: { ...meta, hidden: true, readonly: true, interface: 'input' },
+        };
+      }
+      if (field.type === 'integer') {
+        return {
+          field: field.field,
+          type: 'integer',
+          schema: { is_primary_key: true, has_auto_increment: true, is_nullable: false },
+          meta: { ...meta, hidden: true, readonly: true, interface: 'input' },
+        };
+      }
+    }
+    return {
+      field: field.field,
+      type: field.type,
+      schema: {},
+      meta,
+    };
+  });
+}
+
 async function directusRequest<T>(
   path: string,
   method: string,
@@ -296,38 +347,62 @@ async function loginAsAdmin(): Promise<string> {
 }
 
 async function ensureCollection(token: string, collection: { name: string; icon?: string; singleton?: boolean }) {
-  const exists = await directusRequest(`/collections/${collection.name}`, 'GET', token, undefined, true);
-  if (exists) return;
-  await directusRequest('/collections', 'POST', token, {
-    collection: collection.name,
-    meta: {
-      icon: collection.icon ?? 'table_chart',
-      hidden: false,
-      singleton: Boolean(collection.singleton),
-      note: 'Seeded by scripts/seed.ts',
+  // Directus 11 often returns 403 (not 404) on GET /collections/:name when the collection
+  // does not exist yet — so we create with POST + `schema: {}` per system API requirements.
+  const embeddedFields = buildEmbeddedCollectionFields(collection.name);
+  const res = await fetch(`${DIRECTUS_URL}/collections`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({
+      collection: collection.name,
+      schema: {},
+      meta: {
+        icon: collection.icon ?? 'table_chart',
+        hidden: false,
+        singleton: Boolean(collection.singleton),
+        note: 'Seeded by scripts/seed.ts',
+      },
+      ...(embeddedFields.length ? { fields: embeddedFields } : {}),
+    }),
   });
-  console.log(`+ collection ${collection.name}`);
+  if (res.ok) {
+    console.log(`+ collection ${collection.name}`);
+    return;
+  }
+  const text = await res.text();
+  if (res.status === 409 || /exists|duplicate|already/i.test(text)) return;
+  if (res.status === 403 && /exists|duplicate|already/i.test(text)) return;
+  if (res.status === 400 && /exists|duplicate|already/i.test(text)) return;
+  throw new Error(`[POST /collections ${collection.name}] ${res.status} ${text}`);
 }
 
 async function ensureField(token: string, collection: string, field: { field: string; type: string }) {
-  const existing = await directusRequest<{ data: Array<{ field: string }> }>(
-    `/fields/${collection}`,
-    'GET',
-    token,
-    undefined,
-    true,
-  );
-  if (existing?.data?.some((f) => f.field === field.field)) return;
-  await directusRequest(`/fields/${collection}`, 'POST', token, {
-    field: field.field,
-    type: field.type,
-    meta: {
-      interface: field.type === 'text' ? 'input-multiline' : field.type === 'json' ? 'input-code' : 'input',
-      width: 'full',
+  const res = await fetch(`${DIRECTUS_URL}/fields/${collection}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({
+      field: field.field,
+      type: field.type,
+      meta: {
+        interface: field.type === 'text' ? 'input-multiline' : field.type === 'json' ? 'input-code' : 'input',
+        width: 'full',
+      },
+    }),
   });
-  console.log(`  + field ${collection}.${field.field}`);
+  if (res.ok) {
+    console.log(`  + field ${collection}.${field.field}`);
+    return;
+  }
+  const text = await res.text();
+  if (res.status === 409 || /exists|duplicate|already/i.test(text)) return;
+  if (res.status === 400 && /exists|duplicate|already/i.test(text)) return;
+  throw new Error(`[POST /fields/${collection}/${field.field}] ${res.status} ${text}`);
 }
 
 async function ensureSchema(token: string) {
@@ -374,7 +449,19 @@ async function ensurePublicPermissions(token: string): Promise<string> {
   const editorRole = await ensureRole(token, 'Editor');
   void editorRole;
 
-  for (const collection of ['documents', 'organizations', 'themes', 'document_types', 'languages', 'governorates', 'partners', 'donation_tiers']) {
+  for (const collection of [
+    'documents',
+    'organizations',
+    'themes',
+    'document_types',
+    'languages',
+    'governorates',
+    'partners',
+    'donation_tiers',
+    'pages',
+    'team_members',
+    'search_facets',
+  ]) {
     await ensurePermission(token, publicRole, collection, 'read');
   }
   await ensurePermission(token, publicRole, 'donations', 'read');
@@ -384,18 +471,36 @@ async function ensurePublicPermissions(token: string): Promise<string> {
   return publicRole;
 }
 
+function isSingletonCollection(name: string): boolean {
+  return Boolean(COLLECTIONS.find((c) => c.name === name)?.singleton);
+}
+
 async function upsertItem(token: string, collection: string, item: DirectusItem, idField = 'id') {
+  if (isSingletonCollection(collection)) {
+    await directusRequest(`/items/${collection}`, 'PATCH', token, item);
+    return;
+  }
   const id = item[idField] as string | number | undefined;
   if (id === undefined || id === null) {
     await directusRequest(`/items/${collection}`, 'POST', token, item);
     return;
   }
-  const exists = await directusRequest(`/items/${collection}/${encodeURIComponent(String(id))}`, 'GET', token, undefined, true);
-  if (exists) {
-    await directusRequest(`/items/${collection}/${encodeURIComponent(String(id))}`, 'PATCH', token, item);
+  const postRes = await fetch(`${DIRECTUS_URL}/items/${collection}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(item),
+  });
+  if (postRes.ok) return;
+  const postText = await postRes.text();
+  if (postRes.status === 400 || postRes.status === 409 || /unique|duplicate|already exists/i.test(postText)) {
+    const path = `/items/${collection}/${encodeURIComponent(String(id))}`;
+    await directusRequest(path, 'PATCH', token, item);
     return;
   }
-  await directusRequest(`/items/${collection}`, 'POST', token, item);
+  throw new Error(`[POST /items/${collection}] ${postRes.status} ${postText}`);
 }
 
 function normalizeDocument(doc: (typeof mockDocuments)[number]): DirectusItem {
@@ -487,7 +592,7 @@ async function seedData(token: string) {
 }
 
 async function ensurePublicToken(token: string, publicRole: string): Promise<string> {
-  const email = 'public-api@local.test';
+  const email = 'public-api@example.com';
   const staticToken = randomUUID().replace(/-/g, '');
   const users = await directusRequest<{ data: Array<{ id: string; token?: string }> }>(
     `/users?filter[email][_eq]=${encodeURIComponent(email)}&fields=id,token`,
@@ -554,6 +659,43 @@ async function configureMeili() {
   });
 }
 
+async function attachFixtureSamplePdf(token: string) {
+  const filePath = resolve(process.cwd(), 'fixtures/sample.pdf');
+  if (!existsSync(filePath)) {
+    console.log('(skip) fixtures/sample.pdf not found');
+    return;
+  }
+  const buffer = readFileSync(filePath);
+  const form = new FormData();
+  form.append('file', new Blob([buffer], { type: 'application/pdf' }), 'sample.pdf');
+  const res = await fetch(`${DIRECTUS_URL}/files`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    console.warn('Fixture PDF upload skipped:', res.status, await res.text());
+    return;
+  }
+  const uploaded = (await res.json()) as { data?: { id: string; filename_download?: string } };
+  const fid = uploaded.data?.id;
+  if (!fid) return;
+  const base = DIRECTUS_URL.replace(/\/$/, '');
+  const fileBlock = {
+    id: 'docfile-sample',
+    document: 'doc-001',
+    file: {
+      id: fid,
+      url: `${base}/assets/${fid}`,
+      filename: uploaded.data?.filename_download ?? 'sample.pdf',
+      mime_type: 'application/pdf',
+    },
+    kind: 'main',
+  };
+  await directusRequest('/items/documents/doc-001', 'PATCH', token, { files: [fileBlock] });
+  console.log('+ attached fixtures/sample.pdf to doc-001');
+}
+
 async function waitForDirectus() {
   for (let i = 0; i < 60; i += 1) {
     try {
@@ -575,6 +717,7 @@ async function main() {
   const publicRole = await ensurePublicPermissions(adminToken);
   const publicToken = await ensurePublicToken(adminToken, publicRole);
   await seedData(adminToken);
+  await attachFixtureSamplePdf(adminToken);
   await configureMeili();
 
   console.log('\nSeed complete.');

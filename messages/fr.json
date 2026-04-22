@@ -96,6 +96,7 @@
     "documentType": "Type de document",
     "governorates": "Gouvernorats",
     "keywords": "Mots-clés",
+    "abstract": "Résumé",
     "files": "Fichiers",
     "mainFile": "Document complet",
     "executiveSummary": "Résumé exécutif",
@@ -199,6 +200,7 @@
     "email": "Email",
     "phone": "Téléphone",
     "address": "Adresse",
+    "description": "Présentation",
     "suggestCorrection": "Suggérer une correction",
     "documentsHeading": "Documents de {org}",
     "empty": "Aucun document publié par cette organisation pour le moment."

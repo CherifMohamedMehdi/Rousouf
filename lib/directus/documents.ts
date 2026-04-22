@@ -1,12 +1,14 @@
 /**
  * Document data access — the main data surface of the app.
  *
- * Every helper here takes a plain options object and returns a typed
- * Document / Document[] / SiteStats. The mock branch filters in-memory;
- * the real branch will translate the same options into Directus REST
- * query parameters.
+ * Every helper takes a plain options object and returns a typed
+ * `Document` / `Document[]` / `SiteStats`. With `DIRECTUS_URL` unset we use
+ * mocks; otherwise we read from Directus using the same JSON shape as
+ * `scripts/seed.ts`.
  */
+import { getDirectusCatalog, mapDirectusDocumentRow } from './catalog';
 import { isMockMode } from './client';
+import { directusGetItem, directusListItems } from './http';
 import { mockDocuments } from '@/mocks/documents';
 import type { Document, SiteStats } from '@/types/directus';
 
@@ -142,6 +144,39 @@ function sortDocs(docs: Document[], sort: DocumentQuery['sort']): Document[] {
   return out;
 }
 
+async function loadDocumentsFromDirectus(status?: Document['status']): Promise<Document[]> {
+  const c = await getDirectusCatalog();
+  const params: Record<string, string> = {
+    limit: '500',
+    sort: '-date_published',
+  };
+  if (status) params['filter[status][_eq]'] = status;
+  const rows = await directusListItems<Record<string, unknown>>('documents', params);
+  return rows.map((r) => mapDirectusDocumentRow(r, c));
+}
+
+/** Batch-fetch full documents for Meilisearch hit hydration. */
+export async function getDocumentsByIds(ids: string[]): Promise<Map<string, Document>> {
+  const map = new Map<string, Document>();
+  if (!ids.length || isMockMode()) return map;
+  const unique = [...new Set(ids)].filter(Boolean);
+  if (!unique.length) return map;
+  try {
+    const c = await getDirectusCatalog();
+    const rows = await directusListItems<Record<string, unknown>>('documents', {
+      'filter[id][_in]': unique.join(','),
+      limit: '500',
+    });
+    for (const r of rows) {
+      const d = mapDirectusDocumentRow(r, c);
+      map.set(d.id, d);
+    }
+  } catch {
+    // leave map partial
+  }
+  return map;
+}
+
 export async function getDocuments(query: DocumentQuery = {}): Promise<PaginatedDocuments> {
   const effective = { status: 'published' as Document['status'], ...query };
   if (isMockMode()) {
@@ -152,14 +187,32 @@ export async function getDocuments(query: DocumentQuery = {}): Promise<Paginated
     const limit = effective.limit ?? sorted.length;
     return { items: sorted.slice(offset, offset + limit), total };
   }
-  return { items: [], total: 0 };
+
+  try {
+    const all = await loadDocumentsFromDirectus(effective.status);
+    const matched = all.filter((d) => matchesQuery(d, effective));
+    const sorted = sortDocs(matched, effective.sort);
+    const total = sorted.length;
+    const offset = effective.offset ?? 0;
+    const limit = effective.limit ?? sorted.length;
+    return { items: sorted.slice(offset, offset + limit), total };
+  } catch {
+    return { items: [], total: 0 };
+  }
 }
 
 export async function getDocumentById(id: string): Promise<Document | null> {
   if (isMockMode()) {
     return mockDocuments.find((d) => d.id === id) ?? null;
   }
-  return null;
+  try {
+    const c = await getDirectusCatalog();
+    const row = await directusGetItem<Record<string, unknown>>('documents', id);
+    if (!row) return null;
+    return mapDirectusDocumentRow(row, c);
+  } catch {
+    return null;
+  }
 }
 
 export async function getRecentDocuments(limit = 6): Promise<Document[]> {
@@ -213,7 +266,22 @@ export async function getSiteStats(): Promise<SiteStats> {
       latest_year: years.length ? Math.max(...years) : new Date().getFullYear(),
     };
   }
-  return { total_documents: 0, total_organizations: 0, earliest_year: 2011, latest_year: new Date().getFullYear() };
+
+  try {
+    const published = await loadDocumentsFromDirectus('published');
+    const orgs = new Set(published.map((d) => d.organization?.id).filter(Boolean));
+    const years = published
+      .map((d) => yearOf(d.date_published))
+      .filter((y): y is number => y !== null);
+    return {
+      total_documents: published.length,
+      total_organizations: orgs.size,
+      earliest_year: years.length ? Math.min(...years) : 2011,
+      latest_year: years.length ? Math.max(...years) : new Date().getFullYear(),
+    };
+  } catch {
+    return { total_documents: 0, total_organizations: 0, earliest_year: 2011, latest_year: new Date().getFullYear() };
+  }
 }
 
 export async function getAllPublishedDocuments(): Promise<Document[]> {

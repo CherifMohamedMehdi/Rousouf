@@ -9,6 +9,8 @@
  * body for a real MeiliSearch call — the function signature stays the same.
  */
 import { MeiliSearch } from 'meilisearch';
+import { isMockMode } from '@/lib/directus/client';
+import { getDocumentsByIds } from '@/lib/directus/documents';
 import type { Document } from '@/types/directus';
 import { mockDocuments } from '@/mocks/documents';
 import { stopWords } from './meiliConfig';
@@ -87,13 +89,21 @@ async function searchReal(query: SearchQuery): Promise<SearchResult> {
     matchingStrategy: 'all',
   });
 
+  const ids = res.hits.map((h) => String((h as { id?: string }).id ?? '')).filter(Boolean);
+  const byId =
+    !isMockMode() && process.env.DIRECTUS_URL ? await getDocumentsByIds(ids) : new Map<string, Document>();
+
   return {
-    hits: res.hits.map((h) => ({
-      document: h,
-      highlightedTitle: h._formatted?.title,
-      highlightedSnippet: h._formatted?.abstract_original,
-      score: 1,
-    })),
+    hits: res.hits.map((h) => {
+      const hid = String((h as { id?: string }).id ?? '');
+      const full = byId.get(hid);
+      return {
+        document: (full ?? (h as unknown as Document)) as Document,
+        highlightedTitle: (h as { _formatted?: { title?: string } })._formatted?.title,
+        highlightedSnippet: (h as { _formatted?: { abstract_original?: string } })._formatted?.abstract_original,
+        score: 1,
+      };
+    }),
     total: res.estimatedTotalHits ?? res.hits.length,
     query: query.q,
   };

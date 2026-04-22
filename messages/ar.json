@@ -96,6 +96,7 @@
     "documentType": "نوع الوثيقة",
     "governorates": "الولايات",
     "keywords": "الكلمات المفتاحية",
+    "abstract": "الملخص",
     "files": "الملفات",
     "mainFile": "الوثيقة الكاملة",
     "executiveSummary": "ملخص تنفيذي",
@@ -199,6 +200,7 @@
     "email": "البريد الإلكتروني",
     "phone": "الهاتف",
     "address": "العنوان",
+    "description": "نبذة",
     "suggestCorrection": "اقترح تصحيحاً",
     "documentsHeading": "وثائق من {org}",
     "empty": "لا توجد وثائق منشورة من هذه المنظمة بعد."

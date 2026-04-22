@@ -59,7 +59,7 @@ real SDK — no code changes required when you point it at a live Directus.
 2. This command brings up Postgres + Directus + Meilisearch (`docker compose up -d`), runs `scripts/seed.ts`, then starts Next.js dev.
 3. Open:
    - Public site: `http://localhost:3000`
-   - Directus admin: `http://localhost:8055` (default: `admin@local.test` / `roufouf-dev`)
+   - Directus admin: `http://localhost:8055` (default: `admin@example.com` / `roufouf-dev`)
 4. The seed script prints `DIRECTUS_TOKEN`; paste it into `.env.local` if needed and restart `pnpm dev`.
 
 ### Production on a VPS
