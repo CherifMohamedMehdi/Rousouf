@@ -1,0 +1,268 @@
+{
+  "meta": {
+    "siteName": "رفوف",
+    "tagline": "أرشيف المعرفة المدنية",
+    "description": "رفوف أرشيف مفتوح للتقارير والدراسات وأوراق السياسات الصادرة عن المجتمع المدني التونسي. ابحث، استشهد، وساهم."
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "search": "تصفّح",
+    "submit": "المساهمة",
+    "about": "عن المشروع",
+    "donate": "تبرّع",
+    "skipToContent": "تخطّى إلى المحتوى",
+    "toggleLanguage": "تغيير اللغة",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة"
+  },
+  "home": {
+    "heroSearchPlaceholder": "ابحث في التقارير والدراسات والأوراق…",
+    "heroSearchCta": "بحث",
+    "heroSearchLabel": "البحث في الأرشيف",
+    "heroCtaBrowse": "تصفّح الأرشيف",
+    "heroCtaContribute": "المساهمة بوثيقة",
+    "stats": {
+      "title": "لمحة سريعة",
+      "documents": "الوثائق",
+      "organizations": "المنظمات",
+      "yearsCovered": "السنوات المغطّاة"
+    },
+    "themes": {
+      "title": "التصفّح حسب الموضوع",
+      "description": "اختر موضوعاً لتظهر لك كل الوثائق المتاحة حوله."
+    },
+    "recent": {
+      "title": "أضيف مؤخراً",
+      "viewAll": "عرض كل الوثائق"
+    },
+    "partners": {
+      "title": "شركاؤنا",
+      "description": "المؤسسات التي تجعل رفوف ممكناً.",
+      "tierStrategic": "شركاء استراتيجيون",
+      "tierSupporting": "شركاء داعمون",
+      "tierMedia": "شركاء إعلاميون"
+    },
+    "donors": {
+      "title": "بكل امتنان",
+      "description": "يبقى رفوف حيّاً بفضل كرم القرّاء والباحثين والمؤسسات الذين يؤمنون بأن المعرفة المدنية يجب أن تكون حرة. شكر صادق لمن اختاروا أن تُذكر أسماؤهم هنا.",
+      "emptyState": "سيظهر هنا اسم كل من يختار الإدراج بعد فتح باب التبرعات.",
+      "becomeADonor": "ادعم رفوف"
+    }
+  },
+  "search": {
+    "title": "تصفّح الأرشيف",
+    "queryLabel": "بحث",
+    "queryPlaceholder": "ابحث بالعنوان أو الكلمة المفتاحية أو المؤلف…",
+    "filtersHeading": "التصفية",
+    "filters": {
+      "themes": "المواضيع",
+      "documentTypes": "أنواع الوثائق",
+      "organizations": "المنظمات",
+      "governorates": "الولايات",
+      "languages": "اللغات",
+      "yearRange": "السنة"
+    },
+    "activeFilters": "الفلاتر المفعّلة",
+    "clearAll": "مسح الكل",
+    "filterSearchPlaceholder": "ابحث داخل {facet}…",
+    "noFilterMatches": "لا توجد خيارات مطابقة",
+    "resultsCount": "{count, plural, =0 {لا نتائج} =1 {وثيقة واحدة} =2 {وثيقتان} few {# وثائق} many {# وثيقة} other {# وثيقة}}",
+    "pageSize": {
+      "label": "لكل صفحة",
+      "option": "{count}"
+    },
+    "export": {
+      "button": "تصدير البيانات الوصفية (CSV)",
+      "confirmLarge": "يحتوي هذا التصدير على {count} وثيقة (الحد: {threshold}). هل تريد المتابعة؟"
+    },
+    "sort": {
+      "label": "ترتيب",
+      "recent": "الأحدث",
+      "relevant": "الأكثر صلة",
+      "oldest": "الأقدم"
+    },
+    "noResults": {
+      "title": "لا توجد وثائق مطابقة لبحثك",
+      "body": "أتعرف وثيقة ينبغي إدراجها هنا؟ شاركنا إياها — نراجع كل اقتراح.",
+      "cta": "اقترح وثيقة"
+    }
+  },
+  "document": {
+    "publishedBy": "الناشر",
+    "datePublished": "تاريخ النشر",
+    "unknownDate": "بدون تاريخ",
+    "language": "اللغة",
+    "themes": "المواضيع",
+    "documentType": "نوع الوثيقة",
+    "governorates": "الولايات",
+    "keywords": "الكلمات المفتاحية",
+    "files": "الملفات",
+    "mainFile": "الوثيقة الكاملة",
+    "executiveSummary": "ملخص تنفيذي",
+    "annex": "ملحق",
+    "dataset": "بيانات",
+    "downloadPdf": "تحميل PDF",
+    "openInViewer": "فتح العارض",
+    "suggestEdit": "اقترح تصحيحاً",
+    "suggestEditAria": "اقترح تصحيحاً لحقل {field}",
+    "relatedFromOrg": "المزيد من {org}",
+    "relatedByTheme": "المزيد عن {theme}",
+    "supersededBanner": "تتوفّر نسخة أحدث من هذه الوثيقة.",
+    "supersedesBanner": "تحلّ هذه الوثيقة محلّ نسخة سابقة.",
+    "viewNewer": "عرض الأحدث",
+    "viewOlder": "عرض الأقدم",
+    "citation": {
+      "heading": "كيف يُستشهد",
+      "apa": "APA",
+      "chicago": "Chicago",
+      "mla": "MLA",
+      "bibtex": "BibTeX",
+      "ris": "RIS",
+      "copy": "نسخ",
+      "copied": "تم النسخ!",
+      "download": "تحميل",
+      "missingWarning": "قد يكون هذا الاستشهاد ناقصاً — ",
+      "missingField": "أضف {field}"
+    },
+    "share": {
+      "heading": "مشاركة",
+      "twitter": "مشاركة على X",
+      "linkedin": "مشاركة على LinkedIn",
+      "facebook": "مشاركة على Facebook",
+      "whatsapp": "مشاركة على WhatsApp",
+      "copyLink": "نسخ الرابط",
+      "linkCopied": "تم نسخ الرابط"
+    }
+  },
+  "suggest": {
+    "title": "اقتراح تصحيح",
+    "subtitle": "يساعدنا اقتراحك على حفظ دقة الأرشيف. سيراجعه المحرر قبل تطبيقه.",
+    "fieldLabel": "الحقل",
+    "currentLabel": "القيمة الحالية",
+    "suggestedLabel": "تصحيحك",
+    "noteLabel": "ملاحظة للمحرر (اختياري)",
+    "emailLabel": "بريدك الإلكتروني (اختياري، للمتابعة)",
+    "submit": "إرسال التصحيح",
+    "submitting": "جاري الإرسال…",
+    "success": "شكراً — وصل اقتراحك.",
+    "error": "حدث خطأ. يرجى المحاولة مجدداً.",
+    "cancel": "إلغاء",
+    "close": "إغلاق"
+  },
+  "submit": {
+    "title": "المساهمة بوثيقة",
+    "subtitle": "أضف تقارير أو أوراق سياسات أو دراسات إلى الأرشيف. يراجع فريقنا كل مساهمة قبل نشرها.",
+    "modeSingle": "ملف واحد",
+    "modeBulk": "دفعة (حتى {max} ملفاً)",
+    "dropSingle": "أفلت ملف PDF هنا أو انقر للاستعراض.",
+    "dropBulk": "أفلت حتى {max} ملف PDF هنا، أو انقر للاستعراض.",
+    "fileMaxSize": "حد أقصى {mb} ميغابايت لكل ملف، PDF فقط.",
+    "processing": "جاري المعالجة…",
+    "autodetected": "اكتُشف تلقائياً",
+    "autodetectedHint": "تم التعبئة تلقائياً من الـPDF. راجعها قبل الإرسال.",
+    "duplicate": {
+      "exactTitle": "هذا الملف موجود أصلاً في الأرشيف.",
+      "exactBody": "عُثر على تطابق تام. يمكنك عرض الفيش الموجودة.",
+      "fuzzyTitle": "وثيقة شديدة الشبه",
+      "fuzzyBody": "محتوى هذه الوثيقة قريب جداً من فيش موجودة. راجع وأكّد أنها ليست نسخة مكررة.",
+      "viewMatch": "عرض الفيش",
+      "notDuplicate": "ليست مكررة — متابعة"
+    },
+    "fields": {
+      "title": "العنوان",
+      "author": "المؤلف",
+      "organization": "المنظمة",
+      "datePublished": "تاريخ النشر",
+      "language": "اللغة",
+      "documentType": "نوع الوثيقة",
+      "themes": "المواضيع",
+      "governorates": "الولايات",
+      "keywords": "كلمات مفتاحية (مفصولة بفاصلة)",
+      "abstract": "الملخص",
+      "submittedByName": "اسمك",
+      "submittedByEmail": "بريدك الإلكتروني",
+      "submittedByOrg": "منظمتك"
+    },
+    "submit": "إرسال",
+    "submitAll": "إرسال الكل",
+    "success": {
+      "title": "شكراً — وصلت المساهمة",
+      "body": "سيراجعها فريقنا وسينشرها إذا كانت تناسب الأرشيف."
+    },
+    "progress": "تمت معالجة {done} من أصل {total}",
+    "summary": "{ready} جاهز · {warning} مُعلَّم"
+  },
+  "organization": {
+    "verifiedBadge": "منظمة موثقة",
+    "verifiedAria": "تم التحقق من هذه المنظمة من قبل فريق رفوف التحريري.",
+    "website": "الموقع",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "address": "العنوان",
+    "suggestCorrection": "اقترح تصحيحاً",
+    "documentsHeading": "وثائق من {org}",
+    "empty": "لا توجد وثائق منشورة من هذه المنظمة بعد."
+  },
+  "about": {
+    "title": "عن رفوف",
+    "missionHeading": "رسالتنا",
+    "teamHeading": "الفريق",
+    "contactHeading": "تواصل معنا",
+    "contact": {
+      "name": "اسمك",
+      "email": "بريدك الإلكتروني",
+      "subject": "الموضوع",
+      "message": "الرسالة",
+      "submit": "إرسال",
+      "success": "شكراً — سنعود إليك قريباً.",
+      "error": "حدث خطأ. يرجى المحاولة مجدداً."
+    }
+  },
+  "donate": {
+    "title": "ادعم رفوف",
+    "intro": "رفوف مجاني ومفتوح. ساعدنا على إبقائه كذلك — يمول تبرعك الحفظ والترجمة وتطوير ميزات جديدة للباحثين والصحفيين.",
+    "chooseAmount": "اختر مبلغاً",
+    "customAmount": "مبلغ آخر",
+    "currency": "العملة",
+    "frequency": "التكرار",
+    "oneTime": "مرة واحدة",
+    "monthly": "شهري",
+    "monthlyDisabled": "التبرعات الشهرية قادمة قريباً.",
+    "impactHeading": "ماذا يمول تبرعك",
+    "transparencyHeading": "حول الثقة والخصوصية",
+    "form": {
+      "name": "الاسم (اختياري)",
+      "email": "البريد الإلكتروني (اختياري)",
+      "message": "رسالة (اختياري)",
+      "privacyHeading": "الخصوصية",
+      "anonymousLabel": "تبرّع مجهول الهوية",
+      "anonymousHint": "لن يُحفظ اسمك أو بريدك مع هذا التبرع. نحفظ فقط المبلغ للغرض المحاسبي.",
+      "displayLabel": "أظهِر اسمي على جدار متبرعي رفوف في الصفحة الرئيسية",
+      "displayHint": "تسجيل طوعي للظهور. يمكنك اختيار الاسم الذي يُعرض بدقة.",
+      "displayNameLabel": "الاسم المعروض",
+      "displayNamePlaceholder": "مثلاً: سارة",
+      "submit": "متابعة"
+    },
+    "disabled": {
+      "title": "لم تُفتح التبرعات بعد",
+      "body": "شكراً على اهتمامك. سجّلنا بياناتك وسنراسلك فور فتح باب التبرعات.",
+      "continueExploring": "متابعة استكشاف رفوف"
+    },
+    "thankYou": {
+      "title": "شكراً",
+      "body": "دعمك يُبقي الأرشيف مفتوحاً وحراً.",
+      "browseCta": "استكشف الأرشيف"
+    }
+  },
+  "footer": {
+    "tagline": "أرشيف المعرفة المدنية",
+    "credits": "صُنع بعناية للمجتمع المدني التونسي.",
+    "rights": "© {year} رفوف.",
+    "social": "تابعنا"
+  },
+  "errors": {
+    "generic": "حدث خطأ. يرجى المحاولة مجدداً.",
+    "notFound": "الصفحة غير موجودة",
+    "backHome": "العودة إلى الرئيسية"
+  }
+}

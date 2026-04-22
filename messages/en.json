@@ -1,0 +1,268 @@
+{
+  "meta": {
+    "siteName": "Roufouf",
+    "tagline": "The civic knowledge archive",
+    "description": "Roufouf is an open archive of Tunisian civil-society reports, studies, and policy briefs. Search, cite, and contribute."
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Browse",
+    "submit": "Contribute",
+    "about": "About",
+    "donate": "Donate",
+    "skipToContent": "Skip to main content",
+    "toggleLanguage": "Change language",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "home": {
+    "heroSearchPlaceholder": "Search reports, studies, and briefs…",
+    "heroSearchCta": "Search",
+    "heroSearchLabel": "Search the archive",
+    "heroCtaBrowse": "Browse the archive",
+    "heroCtaContribute": "Contribute a document",
+    "stats": {
+      "title": "At a glance",
+      "documents": "Documents",
+      "organizations": "Organizations",
+      "yearsCovered": "Years covered"
+    },
+    "themes": {
+      "title": "Browse by theme",
+      "description": "Pick a theme to see every document we hold on that topic."
+    },
+    "recent": {
+      "title": "Recently added",
+      "viewAll": "View all documents"
+    },
+    "partners": {
+      "title": "Our partners",
+      "description": "Institutions that make Roufouf possible.",
+      "tierStrategic": "Strategic partners",
+      "tierSupporting": "Supporting partners",
+      "tierMedia": "Media partners"
+    },
+    "donors": {
+      "title": "With gratitude",
+      "description": "Roufouf is sustained by the generosity of readers, researchers, and institutions who believe civic knowledge should be free. A heartfelt thank-you to those who have chosen to be named here.",
+      "emptyState": "Once donations open, the names of donors who choose to be listed will appear here.",
+      "becomeADonor": "Support Roufouf"
+    }
+  },
+  "search": {
+    "title": "Browse the archive",
+    "queryLabel": "Search",
+    "queryPlaceholder": "Search by title, keyword, or author…",
+    "filtersHeading": "Filters",
+    "filters": {
+      "themes": "Themes",
+      "documentTypes": "Document types",
+      "organizations": "Organizations",
+      "governorates": "Governorates",
+      "languages": "Languages",
+      "yearRange": "Year range"
+    },
+    "activeFilters": "Active filters",
+    "clearAll": "Clear all",
+    "filterSearchPlaceholder": "Search in {facet}…",
+    "noFilterMatches": "No matching options",
+    "resultsCount": "{count, plural, =0 {No results} =1 {1 document} other {# documents}}",
+    "pageSize": {
+      "label": "Per page",
+      "option": "{count}"
+    },
+    "export": {
+      "button": "Export metadata (CSV)",
+      "confirmLarge": "This export contains {count} documents (threshold: {threshold}). Continue?"
+    },
+    "sort": {
+      "label": "Sort",
+      "recent": "Most recent",
+      "relevant": "Most relevant",
+      "oldest": "Oldest first"
+    },
+    "noResults": {
+      "title": "No documents match your search",
+      "body": "Know a document that should be here? Share it with us — we review every submission.",
+      "cta": "Suggest a document"
+    }
+  },
+  "document": {
+    "publishedBy": "Published by",
+    "datePublished": "Date published",
+    "unknownDate": "n.d.",
+    "language": "Language",
+    "themes": "Themes",
+    "documentType": "Document type",
+    "governorates": "Governorates",
+    "keywords": "Keywords",
+    "files": "Files",
+    "mainFile": "Full document",
+    "executiveSummary": "Executive summary",
+    "annex": "Annex",
+    "dataset": "Dataset",
+    "downloadPdf": "Download PDF",
+    "openInViewer": "Open viewer",
+    "suggestEdit": "Suggest a correction",
+    "suggestEditAria": "Suggest a correction for {field}",
+    "relatedFromOrg": "More from {org}",
+    "relatedByTheme": "More on {theme}",
+    "supersededBanner": "A newer version of this document is available.",
+    "supersedesBanner": "This replaces an earlier version.",
+    "viewNewer": "View newer",
+    "viewOlder": "View older",
+    "citation": {
+      "heading": "How to cite",
+      "apa": "APA",
+      "chicago": "Chicago",
+      "mla": "MLA",
+      "bibtex": "BibTeX",
+      "ris": "RIS",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "download": "Download",
+      "missingWarning": "This citation may be incomplete — ",
+      "missingField": "add {field}"
+    },
+    "share": {
+      "heading": "Share",
+      "twitter": "Share on X",
+      "linkedin": "Share on LinkedIn",
+      "facebook": "Share on Facebook",
+      "whatsapp": "Share on WhatsApp",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied"
+    }
+  },
+  "suggest": {
+    "title": "Suggest a correction",
+    "subtitle": "Your correction helps us keep this archive accurate. An editor will review before anything is applied.",
+    "fieldLabel": "Field",
+    "currentLabel": "Current value",
+    "suggestedLabel": "Your correction",
+    "noteLabel": "Note for the editor (optional)",
+    "emailLabel": "Your email (optional, for follow-up)",
+    "submit": "Submit correction",
+    "submitting": "Submitting…",
+    "success": "Thank you — your correction is on its way.",
+    "error": "Something went wrong. Please try again in a moment.",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "submit": {
+    "title": "Contribute a document",
+    "subtitle": "Add reports, briefs, or studies to the archive. Every submission is reviewed by an editor before publication.",
+    "modeSingle": "Single file",
+    "modeBulk": "Bulk (up to {max} files)",
+    "dropSingle": "Drop a PDF here or click to browse.",
+    "dropBulk": "Drop up to {max} PDFs here, or click to browse.",
+    "fileMaxSize": "Max {mb} MB per file, PDF only.",
+    "processing": "Processing…",
+    "autodetected": "Auto-detected",
+    "autodetectedHint": "Pre-filled from the PDF. Review and edit before submitting.",
+    "duplicate": {
+      "exactTitle": "This file is already in the archive.",
+      "exactBody": "We found an exact match. You can view the existing record below.",
+      "fuzzyTitle": "Very similar document found",
+      "fuzzyBody": "This document's content is very similar to an existing record. Review the match below and confirm this is not a duplicate.",
+      "viewMatch": "View match",
+      "notDuplicate": "Not a duplicate — continue"
+    },
+    "fields": {
+      "title": "Title",
+      "author": "Author",
+      "organization": "Organization",
+      "datePublished": "Date published",
+      "language": "Language",
+      "documentType": "Document type",
+      "themes": "Themes",
+      "governorates": "Governorates",
+      "keywords": "Keywords (comma-separated)",
+      "abstract": "Abstract",
+      "submittedByName": "Your name",
+      "submittedByEmail": "Your email",
+      "submittedByOrg": "Your organization"
+    },
+    "submit": "Submit",
+    "submitAll": "Submit all",
+    "success": {
+      "title": "Thank you — submission received",
+      "body": "Our editors will review your contribution and publish it if it fits the archive."
+    },
+    "progress": "Processed {done} of {total}",
+    "summary": "{ready} ready · {warning} flagged"
+  },
+  "organization": {
+    "verifiedBadge": "Verified organization",
+    "verifiedAria": "This organization has been verified by the Roufouf editorial team.",
+    "website": "Website",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "suggestCorrection": "Suggest a correction",
+    "documentsHeading": "Documents by {org}",
+    "empty": "No published documents from this organization yet."
+  },
+  "about": {
+    "title": "About Roufouf",
+    "missionHeading": "Our mission",
+    "teamHeading": "Team",
+    "contactHeading": "Contact us",
+    "contact": {
+      "name": "Your name",
+      "email": "Your email",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Send message",
+      "success": "Thank you — we'll be in touch.",
+      "error": "Something went wrong. Please try again."
+    }
+  },
+  "donate": {
+    "title": "Support Roufouf",
+    "intro": "Roufouf is free and open. Help us keep it that way — your donation funds preservation, translation, and new features for researchers and journalists.",
+    "chooseAmount": "Choose an amount",
+    "customAmount": "Other amount",
+    "currency": "Currency",
+    "frequency": "Frequency",
+    "oneTime": "One-time",
+    "monthly": "Monthly",
+    "monthlyDisabled": "Monthly donations open soon.",
+    "impactHeading": "What your donation funds",
+    "transparencyHeading": "On trust and privacy",
+    "form": {
+      "name": "Name (optional)",
+      "email": "Email (optional)",
+      "message": "Message (optional)",
+      "privacyHeading": "Privacy",
+      "anonymousLabel": "Donate anonymously",
+      "anonymousHint": "Your name and email will not be stored with this donation. We keep only the amount for accounting.",
+      "displayLabel": "Show my name on the Roufouf donors wall on the homepage",
+      "displayHint": "Opt in to be listed. You choose the exact name to display below.",
+      "displayNameLabel": "Display name",
+      "displayNamePlaceholder": "e.g. Sarah",
+      "submit": "Continue"
+    },
+    "disabled": {
+      "title": "Payments aren't live yet",
+      "body": "Thank you for your interest. We've recorded your details and will email you the moment donations open.",
+      "continueExploring": "Continue exploring Roufouf"
+    },
+    "thankYou": {
+      "title": "Thank you",
+      "body": "Your support keeps the archive open and free.",
+      "browseCta": "Explore the archive"
+    }
+  },
+  "footer": {
+    "tagline": "The civic knowledge archive",
+    "credits": "Made with care for Tunisian civil society.",
+    "rights": "© {year} Roufouf.",
+    "social": "Follow us"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notFound": "Page not found",
+    "backHome": "Return home"
+  }
+}

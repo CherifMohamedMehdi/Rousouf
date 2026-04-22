@@ -1,0 +1,268 @@
+{
+  "meta": {
+    "siteName": "Roufouf",
+    "tagline": "L'archive du savoir citoyen",
+    "description": "Roufouf est une archive ouverte des rapports, études et notes de politique produits par la société civile tunisienne. Rechercher, citer, contribuer."
+  },
+  "nav": {
+    "home": "Accueil",
+    "search": "Explorer",
+    "submit": "Contribuer",
+    "about": "À propos",
+    "donate": "Faire un don",
+    "skipToContent": "Aller au contenu",
+    "toggleLanguage": "Changer de langue",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
+  },
+  "home": {
+    "heroSearchPlaceholder": "Rechercher des rapports, études, notes…",
+    "heroSearchCta": "Rechercher",
+    "heroSearchLabel": "Rechercher dans l'archive",
+    "heroCtaBrowse": "Parcourir l'archive",
+    "heroCtaContribute": "Contribuer un document",
+    "stats": {
+      "title": "En bref",
+      "documents": "Documents",
+      "organizations": "Organisations",
+      "yearsCovered": "Années couvertes"
+    },
+    "themes": {
+      "title": "Parcourir par thème",
+      "description": "Choisissez un thème pour voir tous les documents disponibles."
+    },
+    "recent": {
+      "title": "Ajouts récents",
+      "viewAll": "Voir tous les documents"
+    },
+    "partners": {
+      "title": "Nos partenaires",
+      "description": "Les institutions qui rendent Roufouf possible.",
+      "tierStrategic": "Partenaires stratégiques",
+      "tierSupporting": "Partenaires de soutien",
+      "tierMedia": "Partenaires médias"
+    },
+    "donors": {
+      "title": "Avec gratitude",
+      "description": "Roufouf vit grâce à la générosité des lecteurs, chercheurs et institutions convaincus que le savoir citoyen doit rester libre. Un merci sincère à celles et ceux qui ont accepté d'être cités ici.",
+      "emptyState": "Une fois les dons ouverts, les noms des donateurs qui auront accepté d'être listés apparaîtront ici.",
+      "becomeADonor": "Soutenir Roufouf"
+    }
+  },
+  "search": {
+    "title": "Explorer l'archive",
+    "queryLabel": "Recherche",
+    "queryPlaceholder": "Rechercher par titre, mot-clé, auteur…",
+    "filtersHeading": "Filtres",
+    "filters": {
+      "themes": "Thèmes",
+      "documentTypes": "Types de document",
+      "organizations": "Organisations",
+      "governorates": "Gouvernorats",
+      "languages": "Langues",
+      "yearRange": "Période"
+    },
+    "activeFilters": "Filtres actifs",
+    "clearAll": "Tout effacer",
+    "filterSearchPlaceholder": "Rechercher dans {facet}…",
+    "noFilterMatches": "Aucune option correspondante",
+    "resultsCount": "{count, plural, =0 {Aucun résultat} =1 {1 document} other {# documents}}",
+    "pageSize": {
+      "label": "Par page",
+      "option": "{count}"
+    },
+    "export": {
+      "button": "Exporter les métadonnées (CSV)",
+      "confirmLarge": "Cet export contient {count} documents (seuil : {threshold}). Continuer ?"
+    },
+    "sort": {
+      "label": "Trier",
+      "recent": "Plus récents",
+      "relevant": "Plus pertinents",
+      "oldest": "Plus anciens"
+    },
+    "noResults": {
+      "title": "Aucun document ne correspond à votre recherche",
+      "body": "Vous connaissez un document qui devrait figurer ici ? Partagez-le — nous étudions chaque proposition.",
+      "cta": "Proposer un document"
+    }
+  },
+  "document": {
+    "publishedBy": "Publié par",
+    "datePublished": "Date de publication",
+    "unknownDate": "s.d.",
+    "language": "Langue",
+    "themes": "Thèmes",
+    "documentType": "Type de document",
+    "governorates": "Gouvernorats",
+    "keywords": "Mots-clés",
+    "files": "Fichiers",
+    "mainFile": "Document complet",
+    "executiveSummary": "Résumé exécutif",
+    "annex": "Annexe",
+    "dataset": "Données",
+    "downloadPdf": "Télécharger le PDF",
+    "openInViewer": "Ouvrir le visualiseur",
+    "suggestEdit": "Suggérer une correction",
+    "suggestEditAria": "Suggérer une correction pour {field}",
+    "relatedFromOrg": "Plus de {org}",
+    "relatedByTheme": "Plus sur {theme}",
+    "supersededBanner": "Une version plus récente de ce document est disponible.",
+    "supersedesBanner": "Ce document remplace une version antérieure.",
+    "viewNewer": "Voir la version récente",
+    "viewOlder": "Voir la version antérieure",
+    "citation": {
+      "heading": "Comment citer",
+      "apa": "APA",
+      "chicago": "Chicago",
+      "mla": "MLA",
+      "bibtex": "BibTeX",
+      "ris": "RIS",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "download": "Télécharger",
+      "missingWarning": "Cette citation est peut-être incomplète — ",
+      "missingField": "ajouter {field}"
+    },
+    "share": {
+      "heading": "Partager",
+      "twitter": "Partager sur X",
+      "linkedin": "Partager sur LinkedIn",
+      "facebook": "Partager sur Facebook",
+      "whatsapp": "Partager sur WhatsApp",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien copié"
+    }
+  },
+  "suggest": {
+    "title": "Suggérer une correction",
+    "subtitle": "Votre correction nous aide à maintenir l'archive à jour. Un éditeur la relira avant toute modification.",
+    "fieldLabel": "Champ",
+    "currentLabel": "Valeur actuelle",
+    "suggestedLabel": "Votre correction",
+    "noteLabel": "Note pour l'éditeur (optionnel)",
+    "emailLabel": "Votre email (optionnel, pour un suivi)",
+    "submit": "Envoyer la correction",
+    "submitting": "Envoi…",
+    "success": "Merci — votre correction nous est bien parvenue.",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "submit": {
+    "title": "Contribuer un document",
+    "subtitle": "Ajoutez des rapports, notes ou études à l'archive. Chaque soumission est relue par un éditeur avant publication.",
+    "modeSingle": "Fichier unique",
+    "modeBulk": "En lot (jusqu'à {max} fichiers)",
+    "dropSingle": "Déposez un PDF ici ou cliquez pour parcourir.",
+    "dropBulk": "Déposez jusqu'à {max} PDFs ici, ou cliquez pour parcourir.",
+    "fileMaxSize": "Max {mb} Mo par fichier, PDF uniquement.",
+    "processing": "Traitement…",
+    "autodetected": "Auto-détecté",
+    "autodetectedHint": "Pré-rempli depuis le PDF. Vérifiez avant d'envoyer.",
+    "duplicate": {
+      "exactTitle": "Ce fichier existe déjà dans l'archive.",
+      "exactBody": "Correspondance exacte trouvée. Vous pouvez consulter la fiche existante.",
+      "fuzzyTitle": "Document très similaire trouvé",
+      "fuzzyBody": "Le contenu de ce document est très proche d'une fiche existante. Vérifiez ci-dessous et confirmez qu'il ne s'agit pas d'un doublon.",
+      "viewMatch": "Voir la fiche",
+      "notDuplicate": "Ce n'est pas un doublon — continuer"
+    },
+    "fields": {
+      "title": "Titre",
+      "author": "Auteur·e",
+      "organization": "Organisation",
+      "datePublished": "Date de publication",
+      "language": "Langue",
+      "documentType": "Type de document",
+      "themes": "Thèmes",
+      "governorates": "Gouvernorats",
+      "keywords": "Mots-clés (séparés par des virgules)",
+      "abstract": "Résumé",
+      "submittedByName": "Votre nom",
+      "submittedByEmail": "Votre email",
+      "submittedByOrg": "Votre organisation"
+    },
+    "submit": "Envoyer",
+    "submitAll": "Tout envoyer",
+    "success": {
+      "title": "Merci — soumission reçue",
+      "body": "Notre équipe relira votre contribution et la publiera si elle correspond à l'archive."
+    },
+    "progress": "Traités : {done} sur {total}",
+    "summary": "{ready} prêts · {warning} signalés"
+  },
+  "organization": {
+    "verifiedBadge": "Organisation vérifiée",
+    "verifiedAria": "Cette organisation a été vérifiée par l'équipe éditoriale de Roufouf.",
+    "website": "Site web",
+    "email": "Email",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "suggestCorrection": "Suggérer une correction",
+    "documentsHeading": "Documents de {org}",
+    "empty": "Aucun document publié par cette organisation pour le moment."
+  },
+  "about": {
+    "title": "À propos de Roufouf",
+    "missionHeading": "Notre mission",
+    "teamHeading": "Équipe",
+    "contactHeading": "Nous contacter",
+    "contact": {
+      "name": "Votre nom",
+      "email": "Votre email",
+      "subject": "Sujet",
+      "message": "Message",
+      "submit": "Envoyer",
+      "success": "Merci — nous reviendrons vers vous bientôt.",
+      "error": "Une erreur est survenue. Veuillez réessayer."
+    }
+  },
+  "donate": {
+    "title": "Soutenir Roufouf",
+    "intro": "Roufouf est libre et ouvert. Aidez-nous à le maintenir — votre don finance la préservation, la traduction et de nouvelles fonctionnalités pour les chercheur·es et journalistes.",
+    "chooseAmount": "Choisissez un montant",
+    "customAmount": "Autre montant",
+    "currency": "Devise",
+    "frequency": "Fréquence",
+    "oneTime": "Unique",
+    "monthly": "Mensuel",
+    "monthlyDisabled": "Les dons mensuels arrivent bientôt.",
+    "impactHeading": "Ce que votre don finance",
+    "transparencyHeading": "Sur la confiance et la vie privée",
+    "form": {
+      "name": "Nom (optionnel)",
+      "email": "Email (optionnel)",
+      "message": "Message (optionnel)",
+      "privacyHeading": "Vie privée",
+      "anonymousLabel": "Faire un don anonymement",
+      "anonymousHint": "Votre nom et email ne seront pas enregistrés avec ce don. Nous ne conservons que le montant pour la comptabilité.",
+      "displayLabel": "Afficher mon nom sur le mur des donateurs de Roufouf",
+      "displayHint": "Opt-in pour être listé·e. Vous choisissez le nom exact à afficher.",
+      "displayNameLabel": "Nom à afficher",
+      "displayNamePlaceholder": "ex. Sarah",
+      "submit": "Continuer"
+    },
+    "disabled": {
+      "title": "Les paiements ne sont pas encore actifs",
+      "body": "Merci de votre intérêt. Nous avons enregistré vos coordonnées et vous écrirons dès l'ouverture des dons.",
+      "continueExploring": "Continuer à explorer Roufouf"
+    },
+    "thankYou": {
+      "title": "Merci",
+      "body": "Votre soutien garde l'archive ouverte et libre.",
+      "browseCta": "Explorer l'archive"
+    }
+  },
+  "footer": {
+    "tagline": "L'archive du savoir citoyen",
+    "credits": "Réalisé avec soin pour la société civile tunisienne.",
+    "rights": "© {year} Roufouf.",
+    "social": "Suivez-nous"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Veuillez réessayer.",
+    "notFound": "Page introuvable",
+    "backHome": "Retour à l'accueil"
+  }
+}
