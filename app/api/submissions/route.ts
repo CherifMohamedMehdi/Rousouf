@@ -19,6 +19,7 @@ import { createSubmission } from '@/lib/directus/submissions';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import type { LocalizedText } from '@/types/directus';
+import { sendNotification } from '@/lib/notifications';
 
 interface Body {
   title: string;
@@ -84,6 +85,21 @@ export async function POST(req: Request) {
     submitted_by_email: body.submitted_by_email,
     submitted_by_org: body.submitted_by_org,
     batch_id: body.batch_id,
+  });
+
+  await sendNotification({
+    type: 'submissions',
+    subject: `New submission: ${saved.title}`,
+    lines: [
+      `id: ${saved.id}`,
+      `title: ${saved.title}`,
+      `status: ${saved.status}`,
+      `author: ${saved.author ?? '(none)'}`,
+      `organization: ${saved.organization ?? '(none)'}`,
+      `submitted_by_name: ${saved.submitted_by_name ?? '(none)'}`,
+      `submitted_by_email: ${saved.submitted_by_email ?? '(none)'}`,
+      `date_submitted: ${saved.date_submitted}`,
+    ],
   });
 
   return NextResponse.json({ ok: true, id: saved.id, status: saved.status });

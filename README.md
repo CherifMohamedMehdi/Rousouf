@@ -89,6 +89,19 @@ Every variable is documented inline in `.env.example`. A quick reference:
 | `RATE_LIMIT_WINDOW_SEC` | `60` | Rate-limit window for public writes. |
 | `RATE_LIMIT_MAX` | `10` | Requests per window per IP. |
 | `NEXT_PUBLIC_ANALYTICS_DOMAIN` | *(empty)* | If set with `_SRC`, loads privacy-respecting analytics. |
+| `NOTIFICATIONS_ENABLED` | `false` | Fallback master switch (overridden by Directus Ops Settings). |
+| `NOTIFY_CONTACT_ENABLED` | `true` | Fallback contact notification switch. |
+| `NOTIFY_SUGGESTIONS_ENABLED` | `true` | Fallback suggest-edit notification switch. |
+| `NOTIFY_SUBMISSIONS_ENABLED` | `true` | Fallback submission notification switch. |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | *(empty)* | SMTP transport for notifications. |
+| `NOTIFY_FROM_EMAIL` / `NOTIFY_TO_EMAIL` | *(empty)* | Sender + fallback recipient(s), comma-separated allowed. |
+| `BACKUP_ENABLED` | `false` | Fallback toggle for backup worker. |
+| `BACKUP_POLL_SECONDS` | `300` | Worker poll cadence for checking admin settings. |
+| `BACKUP_INTERVAL_HOURS` | `24` | Fallback backup cadence (admin-editable in UI). |
+| `BACKUP_RETENTION_DAYS` | `30` | Fallback local retention (admin-editable in UI). |
+| `BACKUP_S3_ENABLED` | `false` | Fallback off-site copy toggle. |
+| `BACKUP_S3_BUCKET` / `BACKUP_S3_PREFIX` | *(empty)* / `roufouf` | S3 destination for off-site backups. |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | *(empty)* | Credentials/region for S3 upload. |
 
 ---
 
@@ -112,8 +125,38 @@ Every variable is documented inline in `.env.example`. A quick reference:
 3. Put Caddy or nginx in front for TLS. Sub-domains we use:
    - `cms.roufouf.tn` → Directus admin + API
    - `search.roufouf.tn` → Meilisearch
-4. Enable daily Postgres backups (to S3 or similar) and weekly file-storage
-   snapshots.
+4. Enable backup worker (`BACKUP_ENABLED=true`) so Docker generates scheduled
+   Postgres dumps + Directus uploads archives to local backup volume.
+5. (Recommended) set S3 envs and `BACKUP_S3_ENABLED=true` for off-site copies.
+
+### Notifications and backups
+
+- Public write endpoints send alert emails for contact/suggestions/submissions.
+- Runtime toggles and recipients are managed in Directus **Ops Settings** singleton:
+  - `notifications_enabled`, per-flow switches, `notify_to_emails`
+  - `backup_enabled`, `backup_interval_hours`, `backup_retention_days_local`,
+    `backup_s3_enabled`, `backup_s3_prefix`, optional `backup_pause_until`
+- Docker compose includes a `backup` service that:
+  - reads Ops Settings from Directus on each poll,
+  - runs scheduled backups and logs each run in `backup_jobs`,
+  - supports admin-triggered one-off runs via `backup_requests`,
+  - writes local artifacts to `backup_data` volume at `/backups/local/{postgres,uploads}`,
+  - optionally uploads artifacts to S3-compatible storage.
+
+### Secrets vs admin-editable settings
+
+- **Keep in env only (secrets):**
+  - SMTP credentials, S3 credentials, DB credentials.
+- **Editable by admins in Directus UI:**
+  - notification toggles and recipients,
+  - backup toggle/frequency/retention/pause,
+  - manual backup requests and backup history review.
+
+Restore quick path:
+1. Pick a `backup_jobs` row marked `success` and copy its artifact paths.
+2. Restore DB dump with `gunzip -c <file.sql.gz> | psql ...`.
+3. Restore uploads with `tar -xzf <uploads.tar.gz> -C <directus uploads dir>`.
+4. Restart Directus.
 
 ---
 

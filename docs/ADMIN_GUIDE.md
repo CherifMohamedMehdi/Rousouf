@@ -218,7 +218,60 @@ to keep shareable URLs working.
 
 ---
 
-## 11. Quick troubleshooting
+## 11. Operations (no-code)
+
+These controls are **Admin-only** and are designed so ops changes don't require
+editing project files.
+
+### Operations settings
+
+1. Sidebar → **Content → Ops Settings** (singleton).
+2. Use these fields:
+   - **notifications_enabled**: global on/off for email alerts.
+   - **notify_contact_enabled** / **notify_suggestions_enabled** /
+     **notify_submissions_enabled**: per-flow toggles.
+   - **notify_to_emails**: JSON array of recipients, for example:
+     `["ops@roufouf.tn", "moderation@roufouf.tn"]`.
+   - **backup_enabled**: scheduler on/off.
+   - **backup_interval_hours**: frequency between automatic runs.
+   - **backup_retention_days_local**: local retention on backup volume.
+   - **backup_s3_enabled** + **backup_s3_prefix**: off-site copy behavior.
+   - **backup_pause_until**: temporary pause window.
+3. Save. The backup worker polls these settings and applies changes without code edits.
+
+### Trigger backup now
+
+1. Sidebar → **Content → Backup Requests**.
+2. **Create Item** with:
+   - `status = pending`
+   - optional note
+3. Save. The worker claims pending requests and executes a backup immediately.
+4. Request status moves through `processing` then `completed` (or `failed`).
+
+### Verify backup success
+
+1. Sidebar → **Content → Backup Jobs**.
+2. Filter by **status = success**.
+3. Check:
+   - `started_at` and `finished_at`
+   - `db_backup_path`
+   - `uploads_backup_path`
+   - `storage_targets` (`local`, `s3`, or both)
+4. If jobs are failing, open the latest row and inspect `error`.
+
+### Restore request procedure
+
+1. Identify the recovery point in **Backup Jobs**.
+2. Share job id + artifact paths with the technical operator on duty.
+3. Operator restores DB + uploads from those artifacts.
+4. After restore, verify:
+   - Documents list opens correctly
+   - Files download from document pages
+   - Latest submissions/suggestions still visible
+
+---
+
+## 12. Quick troubleshooting
 
 | Symptom | What to check |
 | ------- | ------------- |
@@ -228,10 +281,13 @@ to keep shareable URLs working.
 | Duplicate warning on a legit new edition | Fill **Supersedes** on the new document pointing to the older one, then publish. |
 | Suggestion inbox growing | Use the saved filters: Pending / Spam / Applied. Reject obvious spam first. |
 | Homepage still shows an old partner | Toggle **is_active → off** and save; clear the Next.js cache if urgent. |
+| No notification emails arriving | In Ops Settings: check `notifications_enabled`, per-flow toggle, and `notify_to_emails`; then ask technical operator to verify SMTP credentials. |
+| Backups not running | In Ops Settings: ensure `backup_enabled = true`, interval > 0, and `backup_pause_until` is empty/past. |
+| Manual backup request stuck pending | Check Backup Jobs for worker errors and notify technical operator if no new jobs appear. |
 
 ---
 
-## 12. Who to ask
+## 13. Who to ask
 
 - **Content questions** (is this a report or a policy brief?): project lead.
 - **Technical questions** (save button greyed out, weird error): send a

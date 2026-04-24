@@ -18,6 +18,7 @@ import { createSuggestion } from '@/lib/directus/suggestions';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import type { SuggestionTargetType } from '@/types/directus';
+import { sendNotification } from '@/lib/notifications';
 
 interface Body {
   target_type: SuggestionTargetType;
@@ -70,6 +71,23 @@ export async function POST(req: Request) {
     suggested_value: body.suggested_value,
     note: body.note,
     suggested_by_email: body.email,
+  });
+
+  await sendNotification({
+    type: 'suggestions',
+    subject: `New suggestion: ${body.target_type} / ${body.field_label || body.field_name}`,
+    lines: [
+      `id: ${saved.id}`,
+      `target_type: ${body.target_type}`,
+      `target_id: ${body.target_id}`,
+      `field: ${body.field_name}`,
+      `submitter_email: ${body.email ?? '(none)'}`,
+      '',
+      `current: ${body.current_value ?? ''}`,
+      `suggested: ${body.suggested_value}`,
+      '',
+      `note: ${body.note ?? '(none)'}`,
+    ],
   });
 
   return NextResponse.json({ ok: true, id: saved.id });

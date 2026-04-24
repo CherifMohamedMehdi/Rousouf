@@ -7,6 +7,7 @@ import { createContactMessage } from '@/lib/directus/contactMessages';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import { isEmailLike } from '@/lib/utils';
+import { sendNotification } from '@/lib/notifications';
 
 interface Body {
   name?: string;
@@ -42,11 +43,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'too_long' }, { status: 400 });
   }
 
-  await createContactMessage({
+  const saved = await createContactMessage({
     name: body.name.trim(),
     email: body.email.trim(),
     subject: body.subject?.trim(),
     message: body.message,
+  });
+
+  await sendNotification({
+    type: 'contact',
+    subject: `New contact message: ${saved.subject ?? '(no subject)'}`,
+    lines: [
+      `id: ${saved.id}`,
+      `name: ${saved.name}`,
+      `email: ${saved.email}`,
+      `subject: ${saved.subject ?? '(none)'}`,
+      '',
+      saved.message ?? '',
+    ],
   });
 
   return NextResponse.json({ ok: true });

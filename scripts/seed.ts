@@ -37,6 +37,9 @@ const COLLECTIONS: Array<{ name: string; icon?: string; singleton?: boolean }> =
   { name: 'contact_messages', icon: 'mail' },
   { name: 'suggestions', icon: 'edit_note' },
   { name: 'submissions', icon: 'upload_file' },
+  { name: 'ops_settings', icon: 'settings', singleton: true },
+  { name: 'backup_jobs', icon: 'history' },
+  { name: 'backup_requests', icon: 'play_circle' },
 ];
 
 const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
@@ -246,6 +249,39 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'status', type: 'string' },
     { field: 'admin_note', type: 'text' },
     { field: 'date_submitted', type: 'timestamp' },
+  ],
+  ops_settings: [
+    { field: 'id', type: 'integer' },
+    { field: 'notifications_enabled', type: 'boolean' },
+    { field: 'notify_contact_enabled', type: 'boolean' },
+    { field: 'notify_suggestions_enabled', type: 'boolean' },
+    { field: 'notify_submissions_enabled', type: 'boolean' },
+    { field: 'notify_to_emails', type: 'json' },
+    { field: 'backup_enabled', type: 'boolean' },
+    { field: 'backup_interval_hours', type: 'integer' },
+    { field: 'backup_retention_days_local', type: 'integer' },
+    { field: 'backup_s3_enabled', type: 'boolean' },
+    { field: 'backup_s3_prefix', type: 'string' },
+    { field: 'backup_pause_until', type: 'timestamp' },
+    { field: 'date_updated', type: 'timestamp' },
+  ],
+  backup_jobs: [
+    { field: 'id', type: 'integer' },
+    { field: 'started_at', type: 'timestamp' },
+    { field: 'finished_at', type: 'timestamp' },
+    { field: 'status', type: 'string' },
+    { field: 'error', type: 'text' },
+    { field: 'db_backup_path', type: 'string' },
+    { field: 'uploads_backup_path', type: 'string' },
+    { field: 'storage_targets', type: 'json' },
+    { field: 'triggered_by', type: 'string' },
+  ],
+  backup_requests: [
+    { field: 'id', type: 'integer' },
+    { field: 'requested_at', type: 'timestamp' },
+    { field: 'requested_by', type: 'string' },
+    { field: 'status', type: 'string' },
+    { field: 'note', type: 'text' },
   ],
 };
 
@@ -589,6 +625,21 @@ async function seedData(token: string) {
     });
   }
   await upsertItem(token, 'pages', { id: 1, ...mockPages });
+  await upsertItem(token, 'ops_settings', {
+    id: 1,
+    notifications_enabled: false,
+    notify_contact_enabled: true,
+    notify_suggestions_enabled: true,
+    notify_submissions_enabled: true,
+    notify_to_emails: [],
+    backup_enabled: false,
+    backup_interval_hours: 24,
+    backup_retention_days_local: 30,
+    backup_s3_enabled: false,
+    backup_s3_prefix: 'roufouf',
+    backup_pause_until: null,
+    date_updated: new Date().toISOString(),
+  });
 }
 
 async function ensurePublicToken(token: string, publicRole: string): Promise<string> {

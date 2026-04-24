@@ -43,6 +43,12 @@ export async function directusListItems<T = Record<string, unknown>>(
 }
 
 export async function directusGetSingleton<T>(collection: string): Promise<T | null> {
+  try {
+    const json = await directusGetJson<{ data: T }>(`/items/${collection}`);
+    if (json?.data) return json.data;
+  } catch {
+    // Fallback to list query for non-singleton-like endpoints.
+  }
   const rows = await directusListItems<T>(collection, { limit: '1', fields: '*' });
   return rows[0] ?? null;
 }

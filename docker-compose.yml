@@ -68,8 +68,46 @@ services:
       - directus_uploads:/directus/uploads
       - directus_extensions:/directus/extensions
 
+  backup:
+    image: alpine:3.20
+    container_name: roufouf-backup
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-false}
+      BACKUP_POLL_SECONDS: ${BACKUP_POLL_SECONDS:-300}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_LOCAL_DIR: /backups/local
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: roufouf
+      POSTGRES_USER: roufouf
+      POSTGRES_PASSWORD: roufouf-dev
+      DIRECTUS_URL: http://directus:8055
+      DIRECTUS_ADMIN_EMAIL: admin@example.com
+      DIRECTUS_ADMIN_PASSWORD: roufouf-dev
+      DIRECTUS_UPLOADS_DIR: /directus/uploads
+      BACKUP_S3_ENABLED: ${BACKUP_S3_ENABLED:-false}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-roufouf}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+    command: >
+      sh -c "apk add --no-cache postgresql16-client aws-cli tar gzip curl jq python3 dos2unix &&
+      dos2unix /opt/backup/backup.sh /opt/backup/entrypoint.sh &&
+      sh /opt/backup/entrypoint.sh"
+    volumes:
+      - directus_uploads:/directus/uploads:ro
+      - backup_data:/backups/local
+      - ./ops/backup:/opt/backup
+
 volumes:
   postgres_data:
   meili_data:
   directus_uploads:
   directus_extensions:
+  backup_data:
