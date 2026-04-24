@@ -1,4 +1,3 @@
-import { cache } from 'react';
 import { isMockMode } from './client';
 import { directusGetSingleton } from './http';
 
@@ -64,7 +63,9 @@ function parseEmails(value: unknown): string[] {
   return [];
 }
 
-export const getOpsSettings = cache(async (): Promise<OpsSettings> => {
+let inFlightSettings: Promise<OpsSettings> | null = null;
+
+async function fetchOpsSettings(): Promise<OpsSettings> {
   const fallback = defaultOpsSettingsFromEnv();
   if (isMockMode()) return fallback;
   try {
@@ -95,4 +96,13 @@ export const getOpsSettings = cache(async (): Promise<OpsSettings> => {
   } catch {
     return fallback;
   }
-});
+}
+
+export async function getOpsSettings(): Promise<OpsSettings> {
+  if (!inFlightSettings) {
+    inFlightSettings = fetchOpsSettings().finally(() => {
+      inFlightSettings = null;
+    });
+  }
+  return inFlightSettings;
+}

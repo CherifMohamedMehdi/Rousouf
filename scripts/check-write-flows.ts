@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createContactMessage } from '@/lib/directus/contactMessages';
 import { createSuggestion } from '@/lib/directus/suggestions';
 import { createSubmission } from '@/lib/directus/submissions';
+import { defaultOpsSettingsFromEnv, getOpsSettings } from '@/lib/directus/opsSettings';
 
 type FetchCall = {
   input: string;
@@ -11,6 +12,16 @@ type FetchCall = {
 const originalFetch = global.fetch;
 const originalDirectusUrl = process.env.DIRECTUS_URL;
 const originalDirectusToken = process.env.DIRECTUS_TOKEN;
+const originalNotifyToEmail = process.env.NOTIFY_TO_EMAIL;
+const originalNotificationsEnabled = process.env.NOTIFICATIONS_ENABLED;
+const originalNotifyContactEnabled = process.env.NOTIFY_CONTACT_ENABLED;
+const originalNotifySuggestionsEnabled = process.env.NOTIFY_SUGGESTIONS_ENABLED;
+const originalNotifySubmissionsEnabled = process.env.NOTIFY_SUBMISSIONS_ENABLED;
+const originalBackupEnabled = process.env.BACKUP_ENABLED;
+const originalBackupInterval = process.env.BACKUP_INTERVAL_HOURS;
+const originalBackupRetention = process.env.BACKUP_RETENTION_DAYS;
+const originalBackupS3Enabled = process.env.BACKUP_S3_ENABLED;
+const originalBackupS3Prefix = process.env.BACKUP_S3_PREFIX;
 
 async function run() {
   const calls: FetchCall[] = [];
@@ -33,6 +44,27 @@ async function run() {
     if (url.includes('/items/submissions')) {
       return new Response(
         JSON.stringify({ data: { id: 'sb-1', status: 'pending', date_submitted: '2026-01-01T00:00:00.000Z' } }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (url.endsWith('/items/ops_settings')) {
+      return new Response(
+        JSON.stringify({
+          data: {
+            id: 1,
+            notifications_enabled: true,
+            notify_contact_enabled: true,
+            notify_suggestions_enabled: false,
+            notify_submissions_enabled: true,
+            notify_to_emails: ['ops@example.org', 'mod@example.org'],
+            backup_enabled: true,
+            backup_interval_hours: 12,
+            backup_retention_days_local: 45,
+            backup_s3_enabled: true,
+            backup_s3_prefix: 'prod',
+            backup_pause_until: null,
+          },
+        }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -91,6 +123,27 @@ async function run() {
   assert.equal(calls.some((c) => c.input.endsWith('/items/suggestions')), true);
   assert.equal(calls.some((c) => c.input.endsWith('/items/submissions')), true);
 
+  process.env.NOTIFICATIONS_ENABLED = 'true';
+  process.env.NOTIFY_CONTACT_ENABLED = 'true';
+  process.env.NOTIFY_SUGGESTIONS_ENABLED = 'true';
+  process.env.NOTIFY_SUBMISSIONS_ENABLED = 'false';
+  process.env.NOTIFY_TO_EMAIL = 'fallback@example.org';
+  process.env.BACKUP_ENABLED = 'false';
+  process.env.BACKUP_INTERVAL_HOURS = '24';
+  process.env.BACKUP_RETENTION_DAYS = '30';
+  process.env.BACKUP_S3_ENABLED = 'false';
+  process.env.BACKUP_S3_PREFIX = 'roufouf';
+  const defaults = defaultOpsSettingsFromEnv();
+  assert.equal(defaults.notifications_enabled, true);
+  assert.equal(defaults.notify_submissions_enabled, false);
+  assert.deepEqual(defaults.notify_to_emails, ['fallback@example.org']);
+
+  const remoteSettings = await getOpsSettings();
+  assert.equal(remoteSettings.backup_enabled, true);
+  assert.equal(remoteSettings.backup_interval_hours, 12);
+  assert.equal(remoteSettings.notify_suggestions_enabled, false);
+  assert.deepEqual(remoteSettings.notify_to_emails, ['ops@example.org', 'mod@example.org']);
+
   // Mock-mode check: no DIRECTUS_URL means no outbound call.
   calls.length = 0;
   process.env.DIRECTUS_URL = '';
@@ -114,5 +167,15 @@ run()
     global.fetch = originalFetch;
     process.env.DIRECTUS_URL = originalDirectusUrl;
     process.env.DIRECTUS_TOKEN = originalDirectusToken;
+    process.env.NOTIFY_TO_EMAIL = originalNotifyToEmail;
+    process.env.NOTIFICATIONS_ENABLED = originalNotificationsEnabled;
+    process.env.NOTIFY_CONTACT_ENABLED = originalNotifyContactEnabled;
+    process.env.NOTIFY_SUGGESTIONS_ENABLED = originalNotifySuggestionsEnabled;
+    process.env.NOTIFY_SUBMISSIONS_ENABLED = originalNotifySubmissionsEnabled;
+    process.env.BACKUP_ENABLED = originalBackupEnabled;
+    process.env.BACKUP_INTERVAL_HOURS = originalBackupInterval;
+    process.env.BACKUP_RETENTION_DAYS = originalBackupRetention;
+    process.env.BACKUP_S3_ENABLED = originalBackupS3Enabled;
+    process.env.BACKUP_S3_PREFIX = originalBackupS3Prefix;
   });
 

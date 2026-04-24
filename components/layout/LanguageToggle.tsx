@@ -7,7 +7,7 @@
 
 import { Fragment } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import { locales, localeNames, type Locale } from '@/lib/i18n/config';
@@ -15,14 +15,12 @@ import { cn } from '@/lib/utils';
 
 export default function LanguageToggle() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const currentLocale = useLocale() as Locale;
   const t = useTranslations('nav');
 
   const buildHref = (target: Locale) => {
     const normalizedPath = pathname.replace(/^\/(ar|fr|en)(?=\/|$)/, '') || '/';
-    const search = searchParams.toString();
-    return `/${target}${normalizedPath === '/' ? '' : normalizedPath}${search ? `?${search}` : ''}`;
+    return `/${target}${normalizedPath === '/' ? '' : normalizedPath}`;
   };
 
   return (

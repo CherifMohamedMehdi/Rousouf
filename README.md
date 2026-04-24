@@ -157,6 +157,7 @@ Restore quick path:
 2. Restore DB dump with `gunzip -c <file.sql.gz> | psql ...`.
 3. Restore uploads with `tar -xzf <uploads.tar.gz> -C <directus uploads dir>`.
 4. Restart Directus.
+5. Follow the full drill + validation checklist in `docs/RESTORE_DRILL.md`.
 
 ---
 
@@ -311,3 +312,12 @@ Content in the archive: each document keeps its original license; metadata
 is CC-BY 4.0 unless otherwise noted.
 
 Built by the Roufouf team. ♥
+
+---
+
+## 12. Operations docs
+
+- `docs/ADMIN_GUIDE.md` — no-code editorial + ops procedures in Directus.
+- `docs/RESTORE_DRILL.md` — executed backup restore rehearsal and verification.
+- `docs/OPERATIONS_RUNBOOK.md` — monitoring, alert handling, incident response.
+- `docs/LAUNCH_CHECKLIST.md` — pre-launch, launch-day, and post-launch checklist.

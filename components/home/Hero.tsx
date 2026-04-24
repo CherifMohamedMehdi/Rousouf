@@ -2,6 +2,7 @@
  * Homepage hero — wordmark, tagline, large SearchBar, dual CTAs.
  */
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import SearchBar from '@/components/search/SearchBar';
 import Button from '@/components/ui/Button';
@@ -31,7 +32,9 @@ export default async function Hero() {
         </p>
 
         <div className="mt-10">
-          <SearchBar size="large" />
+          <Suspense fallback={<div className="h-12 w-full rounded-lg border border-border bg-white/70" aria-hidden="true" />}>
+            <SearchBar size="large" />
+          </Suspense>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

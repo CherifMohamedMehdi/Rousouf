@@ -480,6 +480,29 @@ async function ensurePermission(token: string, role: string, collection: string,
   });
 }
 
+async function ensurePreset(
+  token: string,
+  role: string,
+  collection: string,
+  title: string,
+  filter: Record<string, unknown>,
+) {
+  const existing = await directusRequest<{ data: Array<{ id: number }> }>(
+    `/presets?filter[role][_eq]=${role}&filter[collection][_eq]=${collection}&filter[bookmark][_eq]=true&filter[title][_eq]=${encodeURIComponent(title)}`,
+    'GET',
+    token,
+  );
+  if (existing?.data?.length) return;
+  await directusRequest('/presets', 'POST', token, {
+    role,
+    bookmark: true,
+    title,
+    collection,
+    filter,
+    layout: 'tabular',
+  });
+}
+
 async function ensurePublicPermissions(token: string): Promise<string> {
   const publicRole = await ensureRole(token, 'Public');
   const editorRole = await ensureRole(token, 'Editor');
@@ -505,6 +528,59 @@ async function ensurePublicPermissions(token: string): Promise<string> {
     await ensurePermission(token, publicRole, writable, 'create');
   }
   return publicRole;
+}
+
+async function ensureStaffPermissions(token: string) {
+  const editorRole = await ensureRole(token, 'Editor');
+  const moderatorRole = await ensureRole(token, 'Moderator');
+
+  const editorWritable = [
+    'documents',
+    'organizations',
+    'themes',
+    'document_types',
+    'languages',
+    'governorates',
+    'partners',
+    'donation_tiers',
+    'team_members',
+    'pages',
+    'search_facets',
+    'suggestions',
+    'submissions',
+    'contact_messages',
+    'donation_leads',
+  ];
+  for (const collection of editorWritable) {
+    await ensurePermission(token, editorRole, collection, 'read');
+    await ensurePermission(token, editorRole, collection, 'create');
+    await ensurePermission(token, editorRole, collection, 'update');
+  }
+
+  const moderatorWritable = [...editorWritable, 'donations'];
+  for (const collection of moderatorWritable) {
+    await ensurePermission(token, moderatorRole, collection, 'read');
+    await ensurePermission(token, moderatorRole, collection, 'create');
+    await ensurePermission(token, moderatorRole, collection, 'update');
+  }
+  // Strict ops boundary: staff can inspect backup history but cannot change ops controls.
+  await ensurePermission(token, moderatorRole, 'backup_jobs', 'read');
+}
+
+async function ensureOpsPresets(token: string) {
+  const adminRole = await ensureRole(token, 'Administrator');
+  await ensurePreset(token, adminRole, 'backup_requests', 'Pending backup requests', {
+    status: { _eq: 'pending' },
+  });
+  await ensurePreset(token, adminRole, 'backup_requests', 'Failed backup requests', {
+    status: { _eq: 'failed' },
+  });
+  await ensurePreset(token, adminRole, 'backup_jobs', 'Recent backup failures', {
+    status: { _eq: 'failed' },
+  });
+  await ensurePreset(token, adminRole, 'backup_jobs', 'Recent successful backups', {
+    status: { _eq: 'success' },
+  });
 }
 
 function isSingletonCollection(name: string): boolean {
@@ -766,6 +842,8 @@ async function main() {
   const adminToken = await loginAsAdmin();
   await ensureSchema(adminToken);
   const publicRole = await ensurePublicPermissions(adminToken);
+  await ensureStaffPermissions(adminToken);
+  await ensureOpsPresets(adminToken);
   const publicToken = await ensurePublicToken(adminToken, publicRole);
   await seedData(adminToken);
   await attachFixtureSamplePdf(adminToken);

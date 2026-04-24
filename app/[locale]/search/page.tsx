@@ -102,7 +102,9 @@ export default async function SearchPage({
     <div className="mx-auto max-w-6xl px-4 py-10">
       <header className="space-y-4">
         <h1 className="text-3xl font-semibold text-brand-blue md:text-4xl">{tSearch('title')}</h1>
-        <SearchBar initialQuery={parsed.q ?? ''} />
+        <Suspense fallback={<div className="h-11 w-full rounded-lg border border-border bg-white/70" aria-hidden="true" />}>
+          <SearchBar initialQuery={parsed.q ?? ''} />
+        </Suspense>
       </header>
 
       <div className="mt-8 grid gap-8 md:grid-cols-[260px_minmax(0,1fr)]">
@@ -120,15 +122,23 @@ export default async function SearchPage({
               {tSearch('resultsCount', { count: results.total })}
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <ExportButton total={results.total} />
-              <PageSizeSelect current={parsed.pageSize} />
-              <SortDropdown />
+              <Suspense fallback={null}>
+                <ExportButton total={results.total} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <PageSizeSelect current={parsed.pageSize} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <SortDropdown />
+              </Suspense>
             </div>
           </div>
 
           {chips.length > 0 ? (
             <div className="mt-4">
-              <ActiveFilterChips chips={chips.map((c) => ({ paramKey: c.paramKey, value: c.value, label: c.label }))} />
+              <Suspense fallback={null}>
+                <ActiveFilterChips chips={chips.map((c) => ({ paramKey: c.paramKey, value: c.value, label: c.label }))} />
+              </Suspense>
             </div>
           ) : null}
 
@@ -149,7 +159,9 @@ export default async function SearchPage({
                     </li>
                   ))}
                 </ul>
-                <Pagination page={parsed.page} totalPages={totalPages} />
+                <Suspense fallback={null}>
+                  <Pagination page={parsed.page} totalPages={totalPages} />
+                </Suspense>
               </>
             )}
           </div>

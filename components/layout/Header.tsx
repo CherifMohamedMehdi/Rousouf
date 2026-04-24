@@ -11,7 +11,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Logo from '@/components/brand/Logo';
 import LanguageToggle from './LanguageToggle';
@@ -66,7 +66,9 @@ export default function Header() {
         </nav>
 
         <div className="hidden md:block">
-          <LanguageToggle />
+          <Suspense fallback={<div className="h-6 w-24" aria-hidden="true" />}>
+            <LanguageToggle />
+          </Suspense>
         </div>
 
         <button
@@ -97,7 +99,9 @@ export default function Header() {
               </Link>
             ))}
             <div className="mt-2 border-t border-border pt-2">
-              <LanguageToggle />
+              <Suspense fallback={<div className="h-6 w-24" aria-hidden="true" />}>
+                <LanguageToggle />
+              </Suspense>
             </div>
           </nav>
         </div>

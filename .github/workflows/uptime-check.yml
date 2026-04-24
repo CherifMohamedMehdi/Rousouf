@@ -1,0 +1,41 @@
+name: Uptime Check
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public site
+        run: |
+          set -e
+          if [ -z "${{ secrets.SITE_HEALTH_URL }}" ]; then
+            echo "SITE_HEALTH_URL is not configured, skipping"
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 "${{ secrets.SITE_HEALTH_URL }}"
+
+      - name: Check Directus health
+        run: |
+          set -e
+          if [ -z "${{ secrets.DIRECTUS_HEALTH_URL }}" ]; then
+            echo "DIRECTUS_HEALTH_URL is not configured, skipping"
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 "${{ secrets.DIRECTUS_HEALTH_URL }}"
+
+      - name: Send alert webhook on failure
+        if: failure()
+        run: |
+          if [ -n "${{ secrets.ALERT_WEBHOOK_URL }}" ]; then
+            payload=$(cat <<'EOF'
+          {"text":"Roufouf uptime check failed. Investigate site/directus availability."}
+          EOF
+            )
+            curl -X POST "${{ secrets.ALERT_WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+          fi

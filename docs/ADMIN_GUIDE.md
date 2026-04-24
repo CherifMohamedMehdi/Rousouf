@@ -77,6 +77,21 @@ document or organization page to suggest a correction. These land in the
 > **Tip.** If you're comfortable, the Directus Flow "Apply accepted
 > suggestion" can do the update and status change in one click.
 
+### Moderation cadence (recommended)
+
+- Work **oldest pending first** (not newest first).
+- Daily target: clear all `pending` suggestions older than 72 hours.
+- Use these saved views:
+  - **Pending (oldest first)**: `status = pending`, sort by `date_submitted ASC`
+  - **Applied this week**: `status = applied`, `date_reviewed >= start_of_week`
+  - **Rejected spam**: `status = rejected`, note contains `spam`
+
+### Moderator note templates
+
+- Applied: `Applied to target #{id}; field updated and verified.`
+- Rejected (incorrect): `Rejected: source could not be verified.`
+- Rejected (spam): `Rejected as spam; no action on source record.`
+
 ---
 
 ## 4. Reviewing user submissions (new documents)
@@ -104,6 +119,17 @@ as **Submissions** (not yet Documents).
 
 > The submission collection is public-writable, so rate limiting and honeypot
 > checks happen at the API layer before a submission is ever created.
+
+### Submission triage SLA
+
+- `pending < 3 days`: routine queue.
+- `pending 3-7 days`: escalate to moderator.
+- `pending > 7 days`: mandatory decision (promote/reject) same day.
+
+Saved views:
+- **Pending (oldest first)**: `status = pending`, sort `date_submitted ASC`
+- **Duplicate candidates**: `status = pending`, admin note contains `duplicate`
+- **Promoted this month**: `status = promoted`, `date_submitted >= start_of_month`
 
 ---
 
