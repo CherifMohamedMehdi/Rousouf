@@ -488,18 +488,59 @@ async function ensurePreset(
   filter: Record<string, unknown>,
 ) {
   const existing = await directusRequest<{ data: Array<{ id: number }> }>(
-    `/presets?filter[role][_eq]=${role}&filter[collection][_eq]=${collection}&filter[bookmark][_eq]=true&filter[title][_eq]=${encodeURIComponent(title)}`,
+    `/presets?filter[role][_eq]=${role}&filter[collection][_eq]=${collection}&filter[bookmark][_eq]=${encodeURIComponent(title)}`,
     'GET',
     token,
   );
   if (existing?.data?.length) return;
   await directusRequest('/presets', 'POST', token, {
     role,
-    bookmark: true,
-    title,
+    bookmark: title,
     collection,
     filter,
     layout: 'tabular',
+  });
+}
+
+async function ensureDashboard(token: string, name: string, note: string): Promise<string> {
+  const existing = await directusRequest<{ data: Array<{ id: string }> }>(
+    `/dashboards?filter[name][_eq]=${encodeURIComponent(name)}&limit=1`,
+    'GET',
+    token,
+  );
+  if (existing?.data?.[0]?.id) return existing.data[0].id;
+  const created = await directusRequest<{ data: { id: string } }>('/dashboards', 'POST', token, {
+    name,
+    note,
+    icon: 'dashboard',
+  });
+  if (!created?.data?.id) throw new Error(`Failed to create dashboard: ${name}`);
+  return created.data.id;
+}
+
+async function ensurePanel(
+  token: string,
+  dashboardId: string,
+  name: string,
+  position: { x: number; y: number; w: number; h: number },
+  options: Record<string, unknown>,
+) {
+  const existing = await directusRequest<{ data: Array<{ id: string }> }>(
+    `/panels?filter[dashboard][_eq]=${dashboardId}&filter[name][_eq]=${encodeURIComponent(name)}&limit=1`,
+    'GET',
+    token,
+  );
+  if (existing?.data?.length) return;
+  await directusRequest('/panels', 'POST', token, {
+    dashboard: dashboardId,
+    name,
+    type: 'metric',
+    show_header: true,
+    position_x: position.x,
+    position_y: position.y,
+    width: position.w,
+    height: position.h,
+    options,
   });
 }
 
@@ -580,6 +621,50 @@ async function ensureOpsPresets(token: string) {
   });
   await ensurePreset(token, adminRole, 'backup_jobs', 'Recent successful backups', {
     status: { _eq: 'success' },
+  });
+}
+
+async function ensureOpsDashboard(token: string) {
+  const dashboardId = await ensureDashboard(
+    token,
+    'Operations & Moderation',
+    'First-line operational view for moderation queues and backup health.',
+  );
+  await ensurePanel(token, dashboardId, 'Pending suggestions', { x: 1, y: 1, w: 6, h: 6 }, {
+    collection: 'suggestions',
+    function: 'count',
+    filter: { status: { _eq: 'pending' } },
+    layout: 'vertical',
+  });
+  await ensurePanel(token, dashboardId, 'Pending submissions', { x: 7, y: 1, w: 6, h: 6 }, {
+    collection: 'submissions',
+    function: 'count',
+    filter: { status: { _eq: 'pending' } },
+    layout: 'vertical',
+  });
+  await ensurePanel(token, dashboardId, 'New contact messages', { x: 13, y: 1, w: 6, h: 6 }, {
+    collection: 'contact_messages',
+    function: 'count',
+    filter: { status: { _eq: 'new' } },
+    layout: 'vertical',
+  });
+  await ensurePanel(token, dashboardId, 'Failed backup jobs', { x: 1, y: 7, w: 6, h: 6 }, {
+    collection: 'backup_jobs',
+    function: 'count',
+    filter: { status: { _eq: 'failed' } },
+    layout: 'vertical',
+  });
+  await ensurePanel(token, dashboardId, 'Successful backups', { x: 7, y: 7, w: 6, h: 6 }, {
+    collection: 'backup_jobs',
+    function: 'count',
+    filter: { status: { _eq: 'success' } },
+    layout: 'vertical',
+  });
+  await ensurePanel(token, dashboardId, 'Pending backup requests', { x: 13, y: 7, w: 6, h: 6 }, {
+    collection: 'backup_requests',
+    function: 'count',
+    filter: { status: { _eq: 'pending' } },
+    layout: 'vertical',
   });
 }
 
@@ -844,6 +929,7 @@ async function main() {
   const publicRole = await ensurePublicPermissions(adminToken);
   await ensureStaffPermissions(adminToken);
   await ensureOpsPresets(adminToken);
+  await ensureOpsDashboard(adminToken);
   const publicToken = await ensurePublicToken(adminToken, publicRole);
   await seedData(adminToken);
   await attachFixtureSamplePdf(adminToken);

@@ -44,6 +44,7 @@ export async function createSuggestion(payload: SuggestionPayload): Promise<Sugg
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
+      id: record.id,
       target_type: payload.target_type,
       document_id: payload.document_id ?? null,
       organization_id: payload.organization_id ?? null,
@@ -63,7 +64,10 @@ export async function createSuggestion(payload: SuggestionPayload): Promise<Sugg
     throw new Error(`suggestions write failed: ${res.status}`);
   }
 
-  const json = (await res.json()) as { data?: Partial<Suggestion> };
+  const text = await res.text();
+  const json = (text ? (JSON.parse(text) as { data?: Partial<Suggestion> }) : { data: {} }) as {
+    data?: Partial<Suggestion>;
+  };
   return {
     ...record,
     ...json.data,

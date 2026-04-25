@@ -32,6 +32,7 @@ export async function createSubmission(payload: SubmissionPayload): Promise<Subm
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
+      id: record.id,
       ...payload,
       status: 'pending',
       date_submitted: record.date_submitted,
@@ -43,7 +44,10 @@ export async function createSubmission(payload: SubmissionPayload): Promise<Subm
     throw new Error(`submissions write failed: ${res.status}`);
   }
 
-  const json = (await res.json()) as { data?: Partial<Submission> };
+  const text = await res.text();
+  const json = (text ? (JSON.parse(text) as { data?: Partial<Submission> }) : { data: {} }) as {
+    data?: Partial<Submission>;
+  };
   return {
     ...record,
     ...json.data,

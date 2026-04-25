@@ -34,6 +34,7 @@ export async function createContactMessage(payload: ContactPayload): Promise<Con
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
+      id: record.id,
       name: payload.name,
       email: payload.email,
       subject: payload.subject,
@@ -47,7 +48,10 @@ export async function createContactMessage(payload: ContactPayload): Promise<Con
     throw new Error(`contact_messages write failed: ${res.status}`);
   }
 
-  const json = (await res.json()) as { data?: Partial<ContactMessage> };
+  const text = await res.text();
+  const json = (text ? (JSON.parse(text) as { data?: Partial<ContactMessage> }) : { data: {} }) as {
+    data?: Partial<ContactMessage>;
+  };
   return {
     ...record,
     ...json.data,
