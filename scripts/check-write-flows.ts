@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createContactMessage } from '@/lib/directus/contactMessages';
 import { createSuggestion } from '@/lib/directus/suggestions';
+import { createTranslationSuggestion } from '@/lib/directus/translationSuggestions';
 import { createSubmission } from '@/lib/directus/submissions';
 import { defaultOpsSettingsFromEnv, getOpsSettings } from '@/lib/directus/opsSettings';
 
@@ -44,6 +45,14 @@ async function run() {
     if (url.includes('/items/submissions')) {
       return new Response(
         JSON.stringify({ data: { id: 'sb-1', status: 'pending', date_submitted: '2026-01-01T00:00:00.000Z' } }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (url.includes('/items/translation_suggestions')) {
+      return new Response(
+        JSON.stringify({
+          data: { id: 'ts-1', status: 'pending', date_submitted: '2026-01-01T00:00:00.000Z' },
+        }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -119,9 +128,22 @@ async function run() {
   assert.equal(submission.id, 'sb-1');
   assert.equal(submission.status, 'pending');
 
+  const translationSuggestion = await createTranslationSuggestion({
+    document: 'doc-1',
+    language: 'lang-fr',
+    pdf_file: 'file-uuid-1',
+    file_hash: 'deadbeef',
+    content_fingerprint: 'fingerprint',
+    note: 'official translation',
+    suggested_by_email: 'translator@example.com',
+  });
+  assert.equal(translationSuggestion.id, 'ts-1');
+  assert.equal(translationSuggestion.status, 'pending');
+
   assert.equal(calls.some((c) => c.input.endsWith('/items/contact_messages')), true);
   assert.equal(calls.some((c) => c.input.endsWith('/items/suggestions')), true);
   assert.equal(calls.some((c) => c.input.endsWith('/items/submissions')), true);
+  assert.equal(calls.some((c) => c.input.endsWith('/items/translation_suggestions')), true);
 
   process.env.NOTIFICATIONS_ENABLED = 'true';
   process.env.NOTIFY_CONTACT_ENABLED = 'true';

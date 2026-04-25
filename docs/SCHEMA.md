@@ -62,8 +62,9 @@
 | `themes`            | Taxonomy: thematic areas (Governance, Gender, …)        | All                           | No            |
 | `document_types`    | Taxonomy: policy brief, research report, …              | All                           | No            |
 | `governorates`      | Taxonomy: the 24 Tunisian governorates                  | All                           | No            |
-| `languages`         | Taxonomy: Arabic, French, English, Other                | All                           | No            |
+| `languages`         | Taxonomy: core + seven common languages + Other (§4.4)  | All                           | No            |
 | `suggestions`       | User-submitted field corrections                        | No                            | Yes           |
+| `translation_suggestions` | User-submitted translated PDF for an existing document | No                            | No\*          |
 | `submissions`       | Public document upload requests                         | No                            | Yes           |
 | `contact_messages`  | Inbound contact-form messages                           | No                            | Yes           |
 | `team_members`      | People on the About page                                | All                           | No            |
@@ -78,6 +79,11 @@
 strictly filtered to `status = succeeded AND is_anonymous = false AND
 display_on_homepage = true`. Amount, email, message, provider, and
 `provider_reference` are never exposed publicly.
+
+\* **`translation_suggestions`:** Rows are created only by the Next.js API
+(`POST /api/translation-suggestions`) using `DIRECTUS_TOKEN` after uploading
+the PDF to `directus_files`. The Public role has no Directus create access on
+this collection.
 
 ---
 
@@ -95,6 +101,9 @@ erDiagram
 
   suggestions }o--o| documents : "targets"
   suggestions }o--o| organizations : "targets"
+
+  translation_suggestions }o--|| documents : "for_document"
+  translation_suggestions }o--|| languages : "pdf_language"
 
   submissions }o--|| organizations : "claimed_by"
   submissions }o--|| document_types : "typed_as"
@@ -178,14 +187,23 @@ Same shape as `themes`, **pre-seeded** with all 24 Tunisian governorates.
 
 ### 4.4 `languages`
 
-Same shape as `themes`. Pre-seeded with Arabic, French, English, Other.
+Same shape as `themes`. Pre-seeded with Arabic, French, English, seven widely
+used additional languages (Spanish through Chinese), then **Other** as the
+catch-all (keep **Other** last in `sort_order`).
 
-| slug    | name_ar    | name_fr    | name_en    |
-| ------- | ---------- | ---------- | ---------- |
-| ar      | العربية    | Arabe      | Arabic     |
-| fr      | الفرنسية   | Français   | French     |
-| en      | الإنجليزية | Anglais    | English    |
-| other   | أخرى       | Autre      | Other      |
+| slug    | name_ar      | name_fr    | name_en     |
+| ------- | ------------ | ---------- | ----------- |
+| ar      | العربية      | Arabe      | Arabic      |
+| fr      | الفرنسية     | Français   | French      |
+| en      | الإنجليزية   | Anglais    | English     |
+| es      | الإسبانية    | Espagnol   | Spanish     |
+| it      | الإيطالية    | Italien    | Italian     |
+| de      | الألمانية    | Allemand   | German      |
+| tr      | التركية      | Turc       | Turkish     |
+| pt      | البرتغالية   | Portugais  | Portuguese  |
+| ru      | الروسية      | Russe      | Russian     |
+| zh      | الصينية      | Chinois    | Chinese     |
+| other   | أخرى         | Autre      | Other       |
 
 ---
 
@@ -301,6 +319,31 @@ organizations via `target_type`.
 suggestion, finds the target record, writes `suggested_value` to `field_name`,
 sets `status = approved` and `date_reviewed = now`, and appends a Directus
 Activity Log entry on the target record.
+
+### 6.1a `translation_suggestions`
+
+User-submitted **PDF** of an existing **published** document in another language
+(same editorial model as metadata suggestions: pending → approved/rejected).
+
+| Field                 | Type              | Required | Notes                                                                                 |
+| --------------------- | ----------------- | -------- | ------------------------------------------------------------------------------------- |
+| `id`                  | uuid (pk)         | auto     |                                                                                       |
+| `document`            | M2O → `documents` | yes      | Target document.                                                                     |
+| `language`            | M2O → `languages` | yes      | Language of the uploaded PDF (not necessarily the site UI language).                  |
+| `pdf_file`            | uuid              | yes      | `directus_files.id` produced when the app uploads the PDF before inserting this row. |
+| `file_hash`           | text              | yes      | SHA-256 of the PDF bytes (for dedup / audit).                                        |
+| `content_fingerprint` | text              | yes      | Same normalized excerpt strategy as `documents` / `submissions`.                     |
+| `suggested_by_email`  | string            | no       | Optional contact for follow-up.                                                       |
+| `note`                | text              | no       | Optional context for editors.                                                         |
+| `status`              | enum              | yes      | `pending \| approved \| rejected`. Default `pending`.                                |
+| `admin_note`          | text              | no       | Private note on rejection/approval.                                                   |
+| `date_submitted`      | datetime          | auto     |                                                                                       |
+| `date_reviewed`       | datetime          | no       | Set when status leaves `pending`.                                                     |
+
+**Creation path.** Public users never POST to Directus for this collection. The
+Next.js route `POST /api/translation-suggestions` validates the document
+(`status = published`), uploads the file to Directus, then inserts a row here
+using the static token.
 
 ### 6.2 `submissions`
 
@@ -474,11 +517,11 @@ page's "impact" block.
 
 ## 9. Permissions matrix
 
-| Role         | `documents`                 | `organizations`        | taxonomies | `suggestions`          | `submissions`          | `contact_messages`     | `partners`                               | `donation_tiers`   | `donations`                           | `donation_leads`       | `team_members` | `pages` | `document_files` |
-| ------------ | --------------------------- | ---------------------- | ---------- | ---------------------- | ---------------------- | ---------------------- | ---------------------------------------- | ------------------ | ------------------------------------- | ---------------------- | -------------- | ------- | ---------------- |
-| Public       | Read: `status = published`  | Read: `status = active` | Read       | Create                 | Create                 | Create                 | Read: `is_active && display_on_homepage` | Read: `is_active` | Read (filtered public donors view only)\* | Create                 | Read: `is_active` | Read    | Read (linked only) |
-| Editor       | All + status changes        | All                    | All        | Read + update (review) | Read + update (review) | Read + update          | All                                      | All                | Read                                  | Read + update          | All            | Update  | All              |
-| Super-admin  | All + delete                | All + delete           | All + delete | All + delete         | All + delete         | All + delete         | All + delete                             | All + delete      | All + delete                         | All + delete           | All + delete   | All     | All + delete     |
+| Role         | `documents`                 | `organizations`        | taxonomies | `suggestions`          | `translation_suggestions` | `submissions`          | `contact_messages`     | `partners`                               | `donation_tiers`   | `donations`                           | `donation_leads`       | `team_members` | `pages` | `document_files` |
+| ------------ | --------------------------- | ---------------------- | ---------- | ---------------------- | ------------------------- | ---------------------- | ---------------------- | ---------------------------------------- | ------------------ | ------------------------------------- | ---------------------- | -------------- | ------- | ---------------- |
+| Public       | Read: `status = published`  | Read: `status = active` | Read       | Create                 | No (API + token only)     | Create                 | Create                 | Read: `is_active && display_on_homepage` | Read: `is_active` | Read (filtered public donors view only)\* | Create                 | Read: `is_active` | Read    | Read (linked only) |
+| Editor       | All + status changes        | All                    | All        | Read + update (review) | Read + update (review)    | Read + update (review) | Read + update          | All                                      | All                | Read                                  | Read + update          | All            | Update  | All              |
+| Super-admin  | All + delete                | All + delete           | All + delete | All + delete         | All + delete              | All + delete         | All + delete         | All + delete                             | All + delete      | All + delete                         | All + delete           | All + delete   | All     | All + delete     |
 
 \* Public donors view exposes only `public_display_name || donor_name` and the
 month component of `date_created`. Amount, email, message, provider, and
@@ -514,6 +557,15 @@ stateDiagram-v2
 stateDiagram-v2
   [*] --> pending: public create
   pending --> approved: editor runs "Apply suggestion" flow
+  pending --> rejected: editor rejects
+```
+
+### Translation suggestions
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending: Next.js API + token creates row after file upload
+  pending --> approved: editor attaches PDF to document / marks done
   pending --> rejected: editor rejects
 ```
 
@@ -607,6 +659,7 @@ day-to-day version of these workflows.
   - `donation_tiers`: `payments`, gold
   - `donation_leads`: `emoji_events`, gold (light)
   - `suggestions`: `edit_note`, amber
+  - `translation_suggestions`: `translate`, amber
   - `submissions`: `upload_file`, amber
   - `themes` / `document_types` / `governorates` / `languages`: `label`, neutral
 - `archived` is the soft-delete state on every collection that has it.
@@ -707,9 +760,9 @@ fully-configured Roufouf backend.
    9. `team_members`
    10. `pages` (singleton)
    11. `contact_messages`
-   12. `suggestions`, `submissions`
+   12. `suggestions`, `translation_suggestions`, `submissions`
 
-3. **Seed taxonomies**: import the 24 governorates, the 4 languages, and at
+3. **Seed taxonomies**: import the 24 governorates, the 11 language terms, and at
    least a starter set of themes and document types.
 
 4. **Apply the Postgres indexes** in [§ 11](#11-postgresql-requirements).

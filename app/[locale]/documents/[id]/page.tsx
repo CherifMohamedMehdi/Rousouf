@@ -6,7 +6,8 @@
  *     publication date, and version banner (if superseded).
  *  2. Abstract — localized to the current locale.
  *  3. Metadata sidebar with inline suggest-edit icons per field.
- *  4. PDF viewer + download buttons for each attached file.
+ *  4. PDF viewer + download buttons for each attached file; optional “Suggest a
+ *     translated PDF” (same moderation path as metadata suggestions).
  *  5. CitationBlock (APA/Chicago/MLA/BibTeX/RIS) with missing-field warnings.
  *  6. ShareButtons.
  *  7. RelatedDocuments by organization and by theme.
@@ -23,6 +24,7 @@ import { setRequestLocale, getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
 import { getDocumentById, getRelatedByOrganization, getRelatedByTheme } from '@/lib/directus/documents';
+import { getLanguages } from '@/lib/directus/taxonomies';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { pickLabel, pickLocalizedAbstract, pickLocalizedName, suggestableAbstractField } from '@/lib/i18n/taxonomy';
 import { absoluteUrl, yearOf } from '@/lib/utils';
@@ -37,6 +39,7 @@ import CitationBlock from '@/components/documents/CitationBlock';
 import ShareButtons from '@/components/documents/ShareButtons';
 import MetadataRow from '@/components/documents/MetadataRow';
 import RelatedDocuments from '@/components/documents/RelatedDocuments';
+import SuggestTranslationButton from '@/components/documents/SuggestTranslationButton';
 import { Download, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 export async function generateMetadata({
@@ -83,9 +86,10 @@ export default async function DocumentPage({
   const mainFile = doc.files.find((f) => f.kind === 'main') ?? doc.files[0];
   const orgName = doc.organization ? pickLocalizedName(doc.organization, locale) : '';
 
-  const [byOrg, byTheme] = await Promise.all([
+  const [byOrg, byTheme, languages] = await Promise.all([
     getRelatedByOrganization(doc.id, doc.organization?.id ?? null, 6),
     getRelatedByTheme(doc.id, doc.themes[0]?.slug ?? null, 6),
+    getLanguages(),
   ]);
 
   const jsonLd = documentJsonLd(doc, locale as Locale);
@@ -292,9 +296,22 @@ export default async function DocumentPage({
         {/* Sidebar --------------------------------------------------------- */}
         <aside className="space-y-6">
           <section aria-labelledby="files-heading">
-            <h2 id="files-heading" className="text-lg font-semibold text-brand-blue">
-              {tDoc('files')}
-            </h2>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="files-heading" className="text-lg font-semibold text-brand-blue">
+                {tDoc('files')}
+              </h2>
+              <SuggestTranslationButton
+                documentId={doc.id}
+                documentLanguageId={doc.language?.id ?? null}
+                languages={languages.map((l) => ({
+                  id: l.id,
+                  slug: l.slug,
+                  name_ar: l.name_ar,
+                  name_fr: l.name_fr,
+                  name_en: l.name_en,
+                }))}
+              />
+            </div>
             <ul className="mt-3 space-y-2">
               {doc.files.map((f) => (
                 <li key={f.id}>

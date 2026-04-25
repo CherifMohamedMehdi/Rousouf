@@ -28,7 +28,14 @@ export const mockLanguages: Language[] = [
   { id: 'lang-ar', slug: 'ar', name_ar: 'العربية', name_fr: 'Arabe', name_en: 'Arabic', sort_order: 1 },
   { id: 'lang-fr', slug: 'fr', name_ar: 'الفرنسية', name_fr: 'Français', name_en: 'French', sort_order: 2 },
   { id: 'lang-en', slug: 'en', name_ar: 'الإنجليزية', name_fr: 'Anglais', name_en: 'English', sort_order: 3 },
-  { id: 'lang-other', slug: 'other', name_ar: 'أخرى', name_fr: 'Autre', name_en: 'Other', sort_order: 4 },
+  { id: 'lang-es', slug: 'es', name_ar: 'الإسبانية', name_fr: 'Espagnol', name_en: 'Spanish', sort_order: 4 },
+  { id: 'lang-it', slug: 'it', name_ar: 'الإيطالية', name_fr: 'Italien', name_en: 'Italian', sort_order: 5 },
+  { id: 'lang-de', slug: 'de', name_ar: 'الألمانية', name_fr: 'Allemand', name_en: 'German', sort_order: 6 },
+  { id: 'lang-tr', slug: 'tr', name_ar: 'التركية', name_fr: 'Turc', name_en: 'Turkish', sort_order: 7 },
+  { id: 'lang-pt', slug: 'pt', name_ar: 'البرتغالية', name_fr: 'Portugais', name_en: 'Portuguese', sort_order: 8 },
+  { id: 'lang-ru', slug: 'ru', name_ar: 'الروسية', name_fr: 'Russe', name_en: 'Russian', sort_order: 9 },
+  { id: 'lang-zh', slug: 'zh', name_ar: 'الصينية', name_fr: 'Chinois', name_en: 'Chinese', sort_order: 10 },
+  { id: 'lang-other', slug: 'other', name_ar: 'أخرى', name_fr: 'Autre', name_en: 'Other', sort_order: 11 },
 ];
 
 export const mockGovernorates: Governorate[] = [

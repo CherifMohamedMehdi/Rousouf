@@ -20,6 +20,7 @@ export type DocumentStatus = 'pending' | 'published' | 'rejected' | 'archived';
 export type OrganizationStatus = 'active' | 'archived';
 export type SubmissionStatus = 'pending' | 'promoted' | 'rejected';
 export type SuggestionStatus = 'pending' | 'approved' | 'rejected';
+export type TranslationSuggestionStatus = 'pending' | 'approved' | 'rejected';
 export type DonationStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 export type ContactStatus = 'new' | 'read' | 'replied' | 'archived';
 export type LeadStatus = 'new' | 'contacted' | 'converted' | 'archived';
@@ -149,6 +150,27 @@ export interface Suggestion {
   suggested_value: string;
   note?: string;
   status: SuggestionStatus;
+  admin_note?: string;
+  date_submitted: ISODateTime;
+  date_reviewed?: ISODateTime | null;
+}
+
+/**
+ * User-submitted translated PDF for an existing document. Created via
+ * POST /api/translation-suggestions (server uploads to `directus_files` then
+ * inserts this row). Editors review like metadata suggestions.
+ */
+export interface TranslationSuggestion {
+  id: ID;
+  document: ID;
+  language: ID;
+  /** `directus_files.id` for the uploaded PDF. */
+  pdf_file: ID;
+  file_hash: string;
+  content_fingerprint: string;
+  suggested_by_email?: string;
+  note?: string;
+  status: TranslationSuggestionStatus;
   admin_note?: string;
   date_submitted: ISODateTime;
   date_reviewed?: ISODateTime | null;
