@@ -1,7 +1,6 @@
 /**
  * Contact message writes.
  */
-import { randomUUID } from 'node:crypto';
 import { isMockMode } from './client';
 import type { ContactMessage } from '@/types/directus';
 
@@ -12,9 +11,13 @@ export interface ContactPayload {
   message: string;
 }
 
+function makeId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `contact-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export async function createContactMessage(payload: ContactPayload): Promise<ContactMessage> {
   const record: ContactMessage = {
-    id: randomUUID(),
+    id: makeId(),
     ...payload,
     status: 'new',
     date_created: new Date().toISOString(),
