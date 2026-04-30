@@ -2,15 +2,18 @@
  * Donor-lead writes. Captures donor interest while a payment provider
  * has not been wired in yet (PAYMENT_PROVIDER=disabled).
  */
-import { randomUUID } from 'node:crypto';
 import { isMockMode } from './client';
 import type { DonationLead } from '@/types/directus';
 
 export type DonorLeadPayload = Omit<DonationLead, 'id' | 'status' | 'date_created'>;
 
+function makeId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `lead-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export async function createDonorLead(payload: DonorLeadPayload): Promise<DonationLead> {
   const record: DonationLead = {
-    id: randomUUID(),
+    id: makeId(),
     ...payload,
     status: 'new',
     date_created: new Date().toISOString(),

@@ -21,6 +21,8 @@
 import { NextResponse } from 'next/server';
 import { getPaymentProvider } from '@/lib/payments';
 
+export const runtime = 'edge';
+
 export async function POST(req: Request) {
   const provider = getPaymentProvider();
 

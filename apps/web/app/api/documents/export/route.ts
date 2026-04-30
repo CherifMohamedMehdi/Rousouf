@@ -3,6 +3,8 @@ import { getDocuments } from '@/lib/directus/documents';
 import { parseSearchParams } from '@/lib/search/urlParams';
 import { toDocumentsCsv } from '@/lib/export/documentsCsv';
 
+export const runtime = 'edge';
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const paramsObject: Record<string, string | string[] | undefined> = {};

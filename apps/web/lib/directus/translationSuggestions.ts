@@ -2,7 +2,6 @@
  * Writes to the `translation_suggestions` collection (server-side only,
  * using DIRECTUS_TOKEN).
  */
-import { randomUUID } from 'node:crypto';
 import type { TranslationSuggestion } from '@/types/directus';
 
 export interface CreateTranslationSuggestionInput {
@@ -15,6 +14,10 @@ export interface CreateTranslationSuggestionInput {
   note?: string;
 }
 
+function makeId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `tr-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export async function createTranslationSuggestion(
   payload: CreateTranslationSuggestionInput,
 ): Promise<TranslationSuggestion> {
@@ -24,7 +27,7 @@ export async function createTranslationSuggestion(
     throw new Error('DIRECTUS_URL and DIRECTUS_TOKEN are required');
   }
 
-  const id = randomUUID();
+  const id = makeId();
   const now = new Date().toISOString();
 
   const res = await fetch(`${baseUrl}/items/translation_suggestions`, {

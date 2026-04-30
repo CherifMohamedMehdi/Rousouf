@@ -17,6 +17,8 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit'
 import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import { sendNotification } from '@/lib/notifications';
 
+export const runtime = 'edge';
+
 function maxUploadBytes(): number {
   const mb = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_MB ?? process.env.MAX_UPLOAD_MB ?? 50);
   return (Number.isFinite(mb) ? mb : 50) * 1024 * 1024;

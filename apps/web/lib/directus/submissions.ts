@@ -4,15 +4,18 @@
  * A submission is a pending candidate that editors will review in Directus
  * before promoting to the `documents` collection.
  */
-import { randomUUID } from 'node:crypto';
 import { isMockMode } from './client';
 import type { Submission } from '@/types/directus';
 
 export type SubmissionPayload = Omit<Submission, 'id' | 'status' | 'date_submitted'>;
 
+function makeId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export async function createSubmission(payload: SubmissionPayload): Promise<Submission> {
   const record: Submission = {
-    id: randomUUID(),
+    id: makeId(),
     ...payload,
     status: 'pending',
     date_submitted: new Date().toISOString(),

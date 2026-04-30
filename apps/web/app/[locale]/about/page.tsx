@@ -15,6 +15,8 @@ import TeamGrid from '@/components/about/TeamGrid';
 import ContactForm from '@/components/about/ContactForm';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 
+export const runtime = 'edge';
+
 export async function generateMetadata({
   params,
 }: {

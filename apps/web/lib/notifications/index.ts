@@ -1,4 +1,3 @@
-import nodemailer from 'nodemailer';
 import { getOpsSettings } from '@/lib/directus/opsSettings';
 
 type NotificationType = 'contact' | 'suggestions' | 'submissions';
@@ -36,6 +35,7 @@ function smtpReady(): boolean {
 }
 
 async function getTransporter() {
+  const nodemailer = await import('nodemailer');
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? '587'),

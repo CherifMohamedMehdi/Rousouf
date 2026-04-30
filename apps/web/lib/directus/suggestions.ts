@@ -5,7 +5,6 @@
  * render a confirmation. In production it writes to the Directus
  * `suggestions` collection (public-create permission).
  */
-import { randomUUID } from 'node:crypto';
 import { isMockMode } from './client';
 import type { Suggestion, SuggestionTargetType } from '@/types/directus';
 
@@ -21,10 +20,14 @@ export interface SuggestionPayload {
   note?: string;
 }
 
+function makeId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `sug-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export async function createSuggestion(payload: SuggestionPayload): Promise<Suggestion> {
   const now = new Date().toISOString();
   const record: Suggestion = {
-    id: randomUUID(),
+    id: makeId(),
     ...payload,
     status: 'pending',
     date_submitted: now,
