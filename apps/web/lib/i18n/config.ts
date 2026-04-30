@@ -5,6 +5,8 @@
  * How to edit:
  * - To add a locale, append its code to `locales` and its direction to
  *   `localeDirections`. Also add a matching `messages/<code>.json` file.
+ *   `pnpm build` runs `scripts/sync-middleware-matcher.ts` (prebuild) so
+ *   `middleware.ts` stays in sync — or run `pnpm sync-middleware-matcher`.
  * - The homepage wordmark + layout picks up `dir` automatically via
  *   <html dir>.
  */

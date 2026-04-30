@@ -5,9 +5,11 @@
   "description": "Roufouf — The civic knowledge archive",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
+    "sync-middleware-matcher": "tsx scripts/sync-middleware-matcher.ts",
+    "prebuild": "tsx scripts/sync-middleware-matcher.ts",
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "pnpm sync-middleware-matcher && opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
