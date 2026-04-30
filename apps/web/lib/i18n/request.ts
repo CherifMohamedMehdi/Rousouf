@@ -6,8 +6,7 @@
  * translators can open them in any editor.
  */
 import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { isLocale } from './config';
+import { defaultLocale, isLocale } from './config';
 import arMessages from '../../messages/ar.json';
 import frMessages from '../../messages/fr.json';
 import enMessages from '../../messages/en.json';
@@ -18,8 +17,9 @@ const MESSAGES = {
   en: enMessages,
 } as const;
 
-export default getRequestConfig(async ({ locale }) => {
-  if (!isLocale(locale)) notFound();
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requestedLocale = await requestLocale;
+  const locale = isLocale(requestedLocale) ? requestedLocale : defaultLocale;
 
   return {
     locale,
