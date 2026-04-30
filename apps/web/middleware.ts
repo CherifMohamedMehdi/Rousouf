@@ -24,7 +24,11 @@ export const config = {
     // Only `/` and locale-root paths. Avoids running i18n on `/favicon.ico`,
     // `/_next/*`, `/api/*`, and `/logo.svg`-style assets (previous regex matcher
     // still matched dotted filenames incorrectly).
+    //
+    // Next.js Turbopack requires each matcher entry to be a string literal —
+    // do not interpolate from `locales` here; keep this pattern in sync with
+    // `locales` in lib/i18n/config.ts when adding/removing languages.
     '/',
-    `/(${locales.join('|')})(/.*)?`,
+    '/(ar|fr|en)(/.*)?',
   ],
 };
