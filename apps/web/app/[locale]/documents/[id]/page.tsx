@@ -43,6 +43,8 @@ import RelatedDocuments from '@/components/documents/RelatedDocuments';
 import SuggestTranslationButton from '@/components/documents/SuggestTranslationButton';
 import { Download, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
+export const runtime = 'edge';
+
 export async function generateMetadata({
   params,
 }: {

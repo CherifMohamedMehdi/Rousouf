@@ -9,6 +9,7 @@ import { pickLocalizedName } from '@/lib/i18n/taxonomy';
 import { absoluteUrl, siteUrl } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 
+export const runtime = 'edge';
 export const revalidate = 600;
 
 export async function GET(

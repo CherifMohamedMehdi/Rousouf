@@ -19,6 +19,8 @@ import { Heart } from 'lucide-react';
 
 import { isLocale } from '@/lib/i18n/config';
 
+export const runtime = 'edge';
+
 export async function generateMetadata({
   params,
 }: {
