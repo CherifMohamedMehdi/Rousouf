@@ -35,8 +35,15 @@ function smtpReady(): boolean {
 }
 
 async function getTransporter() {
-  const nodemailer = await import('nodemailer');
-  return nodemailer.createTransport({
+  type Nodemailer = typeof import('nodemailer');
+  const rawUnknown: unknown = await import('nodemailer');
+  const raw = rawUnknown as Nodemailer & { default?: Nodemailer };
+  /** Dynamic `import()` of classic CJS can surface APIs on `.default`; check both shapes. */
+  const nm = typeof raw.createTransport === 'function' ? raw : (raw.default ?? raw);
+  if (typeof nm.createTransport !== 'function') {
+    throw new Error('nodemailer: module did not expose createTransport');
+  }
+  return nm.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? '587'),
     secure: enabled(process.env.SMTP_SECURE, false),

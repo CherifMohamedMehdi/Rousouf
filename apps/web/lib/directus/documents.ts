@@ -28,6 +28,16 @@ export const DIRECTUS_DOCUMENT_FIELDS_LIST =
   'id,title,author,organization,date_published,abstract_original,abstract_translations,language,themes,governorates,document_type,keywords,status,date_uploaded,date_created,date_updated,supersedes,superseded_by,source_url';
 
 const DIRECTUS_LIST_CHUNK = 500;
+
+/** Lazy import breaks the `documents.ts` ⇄ `meilisearch.ts` cycle; guarded for flaky ESM/CJS shapes. */
+async function getDocumentSearchToPaginated() {
+  const mod = await import('@/lib/search/meilisearch');
+  const fn = mod.documentSearchToPaginated;
+  if (typeof fn !== 'function') {
+    throw new Error('@/lib/search/meilisearch: missing documentSearchToPaginated export');
+  }
+  return fn;
+}
 /** Row id guaranteed not to exist in mocks / fixtures — yields zero rows when combined with `status`. */
 const IMPOSSIBLE_DOC_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 
@@ -327,7 +337,7 @@ export async function getDocumentsByIds(
 }
 
 async function getDocumentsViaMeilisearch(query: DocumentQuery): Promise<PaginatedDocuments> {
-  const { documentSearchToPaginated } = await import('@/lib/search/meilisearch');
+  const documentSearchToPaginated = await getDocumentSearchToPaginated();
   return documentSearchToPaginated(query);
 }
 
@@ -511,7 +521,7 @@ export async function getAllPublishedDocuments(): Promise<Document[]> {
 
   if (process.env.MEILISEARCH_HOST && process.env.MEILISEARCH_KEY) {
     try {
-      const { documentSearchToPaginated } = await import('@/lib/search/meilisearch');
+      const documentSearchToPaginated = await getDocumentSearchToPaginated();
       const out: Document[] = [];
       let offset = 0;
       for (;;) {
