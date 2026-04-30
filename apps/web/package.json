@@ -9,7 +9,7 @@
     "prebuild": "tsx scripts/sync-middleware-matcher.ts",
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "pnpm sync-middleware-matcher && opennextjs-cloudflare build",
+    "build:cf": "tsx scripts/build-cloudflare.ts",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
