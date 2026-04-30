@@ -19,8 +19,6 @@ import { mockDocuments } from '@/mocks/documents';
 import type { DuplicateCheckResponse, DuplicateMatch } from '@/types/directus';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 
-export const runtime = 'edge';
-
 interface Body {
   file_hash?: string;
   content_fingerprint?: string;

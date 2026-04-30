@@ -21,8 +21,6 @@ import TransparencyNote from '@/components/donate/TransparencyNote';
 import { isLocale } from '@/lib/i18n/config';
 import type { ImpactCallout } from '@/types/directus';
 
-export const runtime = 'edge';
-
 export async function generateMetadata({
   params,
 }: {

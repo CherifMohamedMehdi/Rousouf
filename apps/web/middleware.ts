@@ -21,7 +21,10 @@ export default createMiddleware({
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static assets, and API/well-known paths.
-    '/((?!api|_next|_vercel|.*\\..*).*)',
+    // Only `/` and locale-root paths. Avoids running i18n on `/favicon.ico`,
+    // `/_next/*`, `/api/*`, and `/logo.svg`-style assets (previous regex matcher
+    // still matched dotted filenames incorrectly).
+    '/',
+    `/(${locales.join('|')})(/.*)?`,
   ],
 };

@@ -22,8 +22,6 @@ import type { LocalizedText } from '@/types/directus';
 import { sendNotification } from '@/lib/notifications';
 import { normalizeOptionalSourceUrl } from '@/lib/validation/sourceUrl';
 
-export const runtime = 'edge';
-
 interface Body {
   title: string;
   author?: string;

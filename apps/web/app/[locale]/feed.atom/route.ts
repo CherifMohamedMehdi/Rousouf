@@ -8,7 +8,6 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { absoluteUrl, siteUrl } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 
-export const runtime = 'edge';
 export const revalidate = 600;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ locale: string }> }) {

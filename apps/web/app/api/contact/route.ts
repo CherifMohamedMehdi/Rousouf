@@ -9,8 +9,6 @@ import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import { isEmailLike } from '@/lib/utils';
 import { sendNotification } from '@/lib/notifications';
 
-export const runtime = 'edge';
-
 interface Body {
   name?: string;
   email?: string;

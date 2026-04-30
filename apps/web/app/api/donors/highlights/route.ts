@@ -10,7 +10,6 @@
 import { NextResponse } from 'next/server';
 import { getPublicDonors } from '@/lib/directus/donations';
 
-export const runtime = 'edge';
 export const revalidate = 60;
 
 export async function GET(req: Request) {

@@ -18,8 +18,6 @@ import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import { siteUrl } from '@/lib/utils';
 import type { CurrencyCode, DonationFrequency } from '@/types/directus';
 
-export const runtime = 'edge';
-
 interface Body {
   amount?: number;
   currency?: CurrencyCode;

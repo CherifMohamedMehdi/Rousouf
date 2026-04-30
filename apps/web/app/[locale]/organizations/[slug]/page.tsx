@@ -25,8 +25,6 @@ import ResultCard from '@/components/search/ResultCard';
 import Pagination from '@/components/search/Pagination';
 import { PAGE_SIZE } from '@/lib/search/urlParams';
 
-export const runtime = 'edge';
-
 export async function generateMetadata({
   params,
 }: {

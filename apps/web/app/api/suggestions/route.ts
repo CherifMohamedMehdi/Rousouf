@@ -20,8 +20,6 @@ import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import type { SuggestionTargetType } from '@/types/directus';
 import { sendNotification } from '@/lib/notifications';
 
-export const runtime = 'edge';
-
 interface Body {
   target_type: SuggestionTargetType;
   target_id: string;
