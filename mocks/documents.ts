@@ -6,7 +6,7 @@
  * list becomes the initial content of the real documents collection; the
  * frontend code path never changes.
  */
-import type { Document } from '@/types/directus';
+import type { Document, PdfPublicDisplayMode } from '@/types/directus';
 import { mockOrganizations } from './organizations';
 import { mockDocumentTypes, mockGovernorates, mockLanguages, mockThemes } from './taxonomies';
 
@@ -16,7 +16,7 @@ const byId = <T extends { id: string }>(list: T[], id: string): T => {
   return hit;
 };
 
-export const mockDocuments: Document[] = [
+const mockDocumentsSeed: Array<Omit<Document, 'pdf_public_display'> & { pdf_public_display?: PdfPublicDisplayMode }> = [
   {
     id: 'doc-001',
     title: 'Observing the 2019 Tunisian legislative elections: a civic monitoring report',
@@ -34,6 +34,7 @@ export const mockDocuments: Document[] = [
     document_type: byId(mockDocumentTypes, 'dt-monitoring-study'),
     governorates: [byId(mockGovernorates, 'g-tunis'), byId(mockGovernorates, 'g-sfax')],
     keywords: ['elections', 'observation', 'ISIE', 'parliament'],
+    source_url: 'https://www.example.org/reports/2019-legislative-observation',
     supersedes: null,
     files: [],
     file_hash: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
@@ -231,3 +232,9 @@ export const mockDocuments: Document[] = [
     date_updated: '2023-06-10T10:00:00.000Z',
   },
 ];
+
+/** Default `pdf_public_display` for seed + mock mode (see docs/SCHEMA.md §5.1). */
+export const mockDocuments: Document[] = mockDocumentsSeed.map((d) => ({
+  ...d,
+  pdf_public_display: d.pdf_public_display ?? 'auto',
+}));

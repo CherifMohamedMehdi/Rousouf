@@ -25,6 +25,26 @@ export async function getOrganizations(): Promise<Organization[]> {
   }
 }
 
+const ORG_FACET_FIELDS = 'id,slug,name,name_ar,name_fr,name_en,is_verified,status,date_created,date_updated';
+
+/** Narrow org rows for search facet labels (avoids loading long descriptions via the full catalog). */
+export async function getOrganizationsForSearchFacets(): Promise<Organization[]> {
+  if (isMockMode()) {
+    return getOrganizations();
+  }
+  try {
+    const rows = await directusListItems<Record<string, unknown>>('organizations', {
+      'filter[status][_eq]': 'active',
+      fields: ORG_FACET_FIELDS,
+      sort: 'name',
+      limit: '500',
+    });
+    return rows.map((r) => mapDirectusOrganization(r)).sort((a, b) => a.name.localeCompare(b.name));
+  } catch {
+    return getOrganizations();
+  }
+}
+
 export async function getOrganizationBySlug(slug: string): Promise<Organization | null> {
   if (isMockMode()) {
     const all = await getOrganizations();

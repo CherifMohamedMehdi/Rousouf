@@ -15,7 +15,8 @@ import DonorsWall from '@/components/home/DonorsWall';
 import { isLocale } from '@/lib/i18n/config';
 import { notFound } from 'next/navigation';
 
-export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 

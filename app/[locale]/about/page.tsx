@@ -16,16 +16,18 @@ import ContactForm from '@/components/about/ContactForm';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'about' });
   return { title: t('title') };
 }
 
-export default async function AboutPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 

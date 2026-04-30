@@ -13,10 +13,11 @@ export const revalidate = 600;
 
 export async function GET(
   _req: Request,
-  { params }: { params: { locale: string; slug: string } },
+  { params }: { params: Promise<{ locale: string; slug: string }> },
 ) {
-  if (!isLocale(params.locale)) notFound();
-  const org = await getOrganizationBySlug(params.slug);
+  const { locale, slug } = await params;
+  if (!isLocale(locale)) notFound();
+  const org = await getOrganizationBySlug(slug);
   if (!org) notFound();
 
   const { items } = await getDocuments({
@@ -27,11 +28,11 @@ export async function GET(
   });
 
   const xml = renderAtomFeed({
-    id: absoluteUrl(`/${params.locale}/organizations/${org.slug}/feed.atom`),
-    title: `Roufouf — ${pickLocalizedName(org, params.locale as Locale)}`,
-    selfUrl: absoluteUrl(`/${params.locale}/organizations/${org.slug}/feed.atom`),
-    htmlUrl: `${siteUrl()}/${params.locale}/organizations/${org.slug}`,
-    locale: params.locale as Locale,
+    id: absoluteUrl(`/${locale}/organizations/${org.slug}/feed.atom`),
+    title: `Roufouf — ${pickLocalizedName(org, locale as Locale)}`,
+    selfUrl: absoluteUrl(`/${locale}/organizations/${org.slug}/feed.atom`),
+    htmlUrl: `${siteUrl()}/${locale}/organizations/${org.slug}`,
+    locale: locale as Locale,
     documents: items,
   });
   return new Response(xml, {

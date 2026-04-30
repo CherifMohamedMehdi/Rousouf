@@ -6,7 +6,17 @@ import { cache } from 'react';
 
 import { isMockMode } from './client';
 import { directusListItems } from './http';
-import type { DirectusFile, Document, DocumentType, Governorate, Language, Organization, Theme } from '@/types/directus';
+import type {
+  DirectusFile,
+  Document,
+  DocumentFileOptimizationStatus,
+  DocumentType,
+  Governorate,
+  Language,
+  Organization,
+  PdfPublicDisplayMode,
+  Theme,
+} from '@/types/directus';
 
 export type DirectusCatalog = {
   themes: Map<string, Theme>;
@@ -124,6 +134,17 @@ function asStringArray(raw: unknown): string[] {
   return raw.map((x) => String(x)).filter(Boolean);
 }
 
+function mapPdfPublicDisplay(v: unknown): PdfPublicDisplayMode {
+  if (v === 'original' || v === 'optimized' || v === 'auto') return v;
+  return 'auto';
+}
+
+function mapOptimizationStatus(raw: unknown): DocumentFileOptimizationStatus | undefined {
+  if (raw === 'pending' || raw === 'processing' || raw === 'ready' || raw === 'failed' || raw === 'skipped')
+    return raw;
+  return undefined;
+}
+
 function parseFiles(raw: unknown, documentId: string): Document['files'] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -134,8 +155,22 @@ function parseFiles(raw: unknown, documentId: string): Document['files'] {
       if (!file || typeof file !== 'object') return null;
       const f = file as Record<string, unknown>;
       if (typeof f.id !== 'string' || typeof f.url !== 'string') return null;
+      const optimizedRaw = o.optimized_file;
+      let optimized_file: DirectusFile | null | undefined;
+      if (optimizedRaw && typeof optimizedRaw === 'object') {
+        const of = optimizedRaw as Record<string, unknown>;
+        if (typeof of.id === 'string' && typeof of.url === 'string') {
+          optimized_file = {
+            id: of.id,
+            url: of.url,
+            filename: typeof of.filename === 'string' ? of.filename : undefined,
+            mime_type: typeof of.mime_type === 'string' ? of.mime_type : undefined,
+          };
+        }
+      }
       const id = typeof o.id === 'string' ? o.id : `file-${documentId}-${idx}`;
       const kind = (o.kind as Document['files'][number]['kind']) ?? 'main';
+      const optimization_status = mapOptimizationStatus(o.optimization_status);
       return {
         id,
         document: documentId,
@@ -145,6 +180,12 @@ function parseFiles(raw: unknown, documentId: string): Document['files'] {
           filename: typeof f.filename === 'string' ? f.filename : undefined,
           mime_type: typeof f.mime_type === 'string' ? f.mime_type : undefined,
         },
+        optimized_file,
+        optimization_status,
+        optimization_error:
+          o.optimization_error === null ? null : typeof o.optimization_error === 'string' ? o.optimization_error : undefined,
+        optimized_at:
+          typeof o.optimized_at === 'string' ? o.optimized_at : o.optimized_at === null ? null : undefined,
         kind,
         label_ar: typeof o.label_ar === 'string' ? o.label_ar : undefined,
         label_fr: typeof o.label_fr === 'string' ? o.label_fr : undefined,
@@ -177,6 +218,7 @@ export function mapDirectusDocumentRow(row: Record<string, unknown>, c: Directus
     id,
     title: String(row.title ?? ''),
     author: typeof row.author === 'string' ? row.author : undefined,
+    pdf_public_display: mapPdfPublicDisplay(row.pdf_public_display),
     organization: orgId ? c.organizations.get(orgId) ?? null : null,
     date_published: typeof row.date_published === 'string' ? row.date_published : null,
     abstract_original: typeof row.abstract_original === 'string' ? row.abstract_original : undefined,
@@ -186,6 +228,8 @@ export function mapDirectusDocumentRow(row: Record<string, unknown>, c: Directus
     document_type: typeId ? c.documentTypes.get(typeId) ?? null : null,
     governorates,
     keywords,
+    source_url:
+      typeof row.source_url === 'string' && row.source_url.trim() ? row.source_url.trim() : undefined,
     supersedes: null,
     superseded_by: null,
     files: parseFiles(row.files, id),

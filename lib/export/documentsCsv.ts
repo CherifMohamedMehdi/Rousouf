@@ -19,6 +19,7 @@ interface ExportRow {
   governorates_slugs: string;
   governorates_names: string;
   keywords: string;
+  source_url: string;
 }
 
 function escapeCsv(value: string): string {
@@ -50,6 +51,7 @@ export function toExportRows(documents: Document[]): ExportRow[] {
     governorates_slugs: joinList(doc.governorates.map((item) => item.slug)),
     governorates_names: joinList(doc.governorates.map((item) => item.name_en)),
     keywords: joinList(doc.keywords ?? []),
+    source_url: doc.source_url?.trim() ?? '',
   }));
 }
 
@@ -74,6 +76,7 @@ export function toDocumentsCsv(documents: Document[]): string {
     'governorates_slugs',
     'governorates_names',
     'keywords',
+    'source_url',
   ];
   const lines = [headers.join(',')];
   for (const row of rows) {

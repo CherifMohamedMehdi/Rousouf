@@ -28,18 +28,32 @@ export async function directusGetJson<T>(path: string, init?: RequestInit): Prom
   return (await res.json()) as T;
 }
 
+export type DirectusListMeta = {
+  filter_count?: number;
+  total_count?: number;
+};
+
 export async function directusListItems<T = Record<string, unknown>>(
   collection: string,
   searchParams?: Record<string, string>,
 ): Promise<T[]> {
+  const { data } = await directusListItemsWithMeta<T>(collection, searchParams);
+  return data;
+}
+
+/** Same as `directusListItems` but returns `meta` (e.g. `filter_count` when `meta=filter_count` is passed). */
+export async function directusListItemsWithMeta<T = Record<string, unknown>>(
+  collection: string,
+  searchParams?: Record<string, string>,
+): Promise<{ data: T[]; meta: DirectusListMeta }> {
   const base = process.env.DIRECTUS_URL!.replace(/\/$/, '');
   const u = new URL(`/items/${collection}`, `${base}/`);
   for (const [k, v] of Object.entries(searchParams ?? {})) {
     u.searchParams.set(k, v);
   }
   const path = `${u.pathname}${u.search}`;
-  const json = await directusGetJson<{ data: T[] }>(path);
-  return json.data ?? [];
+  const json = await directusGetJson<{ data: T[]; meta?: DirectusListMeta }>(path);
+  return { data: json.data ?? [], meta: json.meta ?? {} };
 }
 
 export async function directusGetSingleton<T>(collection: string): Promise<T | null> {

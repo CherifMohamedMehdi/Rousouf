@@ -36,11 +36,11 @@ role, and send them the invite email.
    - **Abstract** — short summary shown on cards and detail pages.
    - **Abstract translations** — optional: fill `ar`, `fr`, `en` in the JSON block
      for a localized abstract shown to each audience.
-3. Attach the PDF(s):
-   - For a single-file report, upload to **PDF file**.
-   - For multi-file reports (annexes, appendices), leave the main field empty
-     and use the **document_files** junction: *Add item → upload → set role
-     (main, annex, translation) + label*.
+3. Attach the PDF(s) on **`Documents → files`** (JSON array on the seeded stack):
+   - Each slot contains **`file`**: upload the publisher-original PDF (it becomes a normal **File Library** row).
+   - Optional **`optimized_file`** and **`optimization_*`** keys are maintained by **`pdf-optimize-worker`** (`docker-compose`); do not rename **`file`** when a derivative appears.
+   - Use **`pdf_public_display`** / **Public PDF display**: *Automatic (optimized when ready)* is the usual default — visitors switch to originals vs derivatives without losing either asset from **Files**.
+   - Separate relational **`document_files`** exists in **`SCHEMA.md`** for normalized installs; Roufouf’s Docker seed uses **`files` JSON instead**, so edits happen in that editor.
 4. Leave **status = draft** while you're still checking. When done, change
    **status → published**.
 5. Click **Save**.
@@ -310,6 +310,7 @@ editing project files.
 | No notification emails arriving | In Ops Settings: check `notifications_enabled`, per-flow toggle, and `notify_to_emails`; then ask technical operator to verify SMTP credentials. |
 | Backups not running | In Ops Settings: ensure `backup_enabled = true`, interval > 0, and `backup_pause_until` is empty/past. |
 | Manual backup request stuck pending | Check Backup Jobs for worker errors and notify technical operator if no new jobs appear. |
+| Compressed PDF (`optimized_file`) never appears | Operators: ensure Compose service **`pdf-worker`** is running, Postgres is reachable, and **`DIRECTUS_TOKEN`** (static token with permission to PATCH **`documents`** and POST **`files`**) is set for that service — see **`docker-compose.yml`**. **`optimization_status`** on the slot stays **`failed`** → read **`optimization_error`**. |
 
 ---
 

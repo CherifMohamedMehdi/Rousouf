@@ -105,6 +105,22 @@ services:
       - backup_data:/backups/local
       - ./ops/backup:/opt/backup
 
+  pdf-worker:
+    build:
+      context: ./workers/pdf-optimize
+    container_name: roufouf-pdf-worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      directus:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://roufouf:roufouf-dev@db:5432/roufouf
+      DIRECTUS_URL: http://directus:8055
+      DIRECTUS_TOKEN: ${DIRECTUS_TOKEN:-}
+      PDF_OPTIMIZE_SWEEP_MS: ${PDF_OPTIMIZE_SWEEP_MS:-120000}
+
 volumes:
   postgres_data:
   meili_data:

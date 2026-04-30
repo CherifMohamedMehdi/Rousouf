@@ -11,6 +11,7 @@
 import { MeiliSearch } from 'meilisearch';
 import { isMockMode } from '@/lib/directus/client';
 import { getDocumentsByIds } from '@/lib/directus/documents';
+import type { DocumentQuery, PaginatedDocuments } from '@/types/documentQuery';
 import type { Document } from '@/types/directus';
 import { mockDocuments } from '@/mocks/documents';
 import { stopWords } from './meiliConfig';
@@ -27,6 +28,8 @@ export interface SearchQuery {
   limit?: number;
   offset?: number;
   dynamicFilters?: Record<string, string[]>;
+  /** Browse / listing sort when using Meilisearch as a document store (not keyword relevance). */
+  listSort?: 'recent' | 'oldest' | 'relevant';
 }
 
 export interface SearchHit {
@@ -44,6 +47,11 @@ export interface SearchResult {
 
 function isRealMeili(): boolean {
   return Boolean(process.env.MEILISEARCH_HOST && process.env.MEILISEARCH_KEY);
+}
+
+/** True when Meilisearch env is configured (used for browse + search). */
+export function isMeilisearchEnabled(): boolean {
+  return isRealMeili();
 }
 
 function meiliClient(): MeiliSearch {
@@ -79,10 +87,19 @@ async function searchReal(query: SearchQuery): Promise<SearchResult> {
     }
   }
 
-  const res = await index.search(query.q, {
+  const qTrim = query.q?.trim() ?? '';
+  const sort =
+    query.listSort === 'oldest'
+      ? (['date_published:asc'] as const)
+      : qTrim.length > 0 && query.listSort === 'relevant'
+        ? undefined
+        : (['date_published:desc'] as const);
+
+  const res = await index.search(query.q ?? '', {
     limit: query.limit ?? 20,
     offset: query.offset ?? 0,
     filter: filters.join(' AND '),
+    ...(sort ? { sort: [...sort] } : {}),
     attributesToHighlight: ['title', 'abstract_original', 'abstract_translations.ar', 'abstract_translations.fr', 'abstract_translations.en', 'keywords'],
     attributesToCrop: ['abstract_original'],
     cropLength: 220,
@@ -91,7 +108,7 @@ async function searchReal(query: SearchQuery): Promise<SearchResult> {
 
   const ids = res.hits.map((h) => String((h as { id?: string }).id ?? '')).filter(Boolean);
   const byId =
-    !isMockMode() && process.env.DIRECTUS_URL ? await getDocumentsByIds(ids) : new Map<string, Document>();
+    !isMockMode() && process.env.DIRECTUS_URL ? await getDocumentsByIds(ids, 'list') : new Map<string, Document>();
 
   return {
     hits: res.hits.map((h) => {
@@ -214,7 +231,11 @@ async function searchMock(query: SearchQuery): Promise<SearchResult> {
   const filtered = mockDocuments.filter((d) => matchesFilters(d, query));
   const q = query.q.trim();
   if (!q) {
-    const sorted = [...filtered].sort((a, b) => (b.date_published ?? '').localeCompare(a.date_published ?? ''));
+    const sorted = [...filtered].sort((a, b) =>
+      query.listSort === 'oldest'
+        ? (a.date_published ?? '').localeCompare(b.date_published ?? '')
+        : (b.date_published ?? '').localeCompare(a.date_published ?? ''),
+    );
     return {
       total: sorted.length,
       query: '',
@@ -259,5 +280,32 @@ async function searchMock(query: SearchQuery): Promise<SearchResult> {
     hits: hits.slice(offset, offset + limit),
     total: hits.length,
     query: q,
+  };
+}
+
+/** Maps browse filters to Meilisearch; `listSort` mirrors `DocumentQuery.sort`. */
+export function mapDocumentQueryToSearchQuery(query: DocumentQuery): SearchQuery {
+  return {
+    q: query.q?.trim() ?? '',
+    themeSlugs: query.themeSlugs,
+    typeSlugs: query.typeSlugs,
+    governorateSlugs: query.governorateSlugs,
+    languageSlugs: query.languageSlugs,
+    organizationSlugs: query.organizationSlugs,
+    yearFrom: query.yearFrom,
+    yearTo: query.yearTo,
+    dynamicFilters: query.dynamicFilters,
+    limit: query.limit,
+    offset: query.offset,
+    listSort: query.sort,
+  };
+}
+
+/** Paginated published documents via Meilisearch (filters + sort + offset/limit). */
+export async function documentSearchToPaginated(query: DocumentQuery): Promise<PaginatedDocuments> {
+  const res = await search(mapDocumentQueryToSearchQuery(query));
+  return {
+    items: res.hits.map((h) => h.document),
+    total: res.total,
   };
 }

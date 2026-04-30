@@ -26,7 +26,6 @@ export default async function OrgHeader({ org, locale }: Props) {
   return (
     <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-start sm:gap-6">
       {org.logo?.url ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={org.logo.url}
           alt={orgName}

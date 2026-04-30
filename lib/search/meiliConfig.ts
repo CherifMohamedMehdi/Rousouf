@@ -38,6 +38,24 @@ export const filterableAttributes = [
 
 export const sortableAttributes = ['date_published', 'date_uploaded'];
 
+/** Limits JSON returned per hit; keep in sync with search cards + filters (not full CMS payloads). */
+export const displayedAttributes = [
+  'id',
+  'title',
+  'author',
+  'organization',
+  'date_published',
+  'date_uploaded',
+  'abstract_original',
+  'abstract_translations',
+  'keywords',
+  'themes',
+  'governorates',
+  'document_type',
+  'language',
+  'status',
+];
+
 /**
  * Multilingual synonym map. Each group is rendered as bidirectional synonyms
  * (every term in the group is a synonym for every other term in the group).
@@ -142,6 +160,7 @@ export const meilisearchIndexSettings = {
   searchableAttributes,
   filterableAttributes,
   sortableAttributes,
+  displayedAttributes,
   synonyms,
   stopWords,
 };

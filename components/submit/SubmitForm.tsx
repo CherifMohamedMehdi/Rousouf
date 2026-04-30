@@ -172,6 +172,7 @@ export default function SubmitForm(props: Props) {
             themes: it.metadata.themes,
             governorates: it.metadata.governorates,
             keywords: it.metadata.keywords.split(',').map((s) => s.trim()).filter(Boolean),
+            source_url: it.metadata.source_url.trim() || undefined,
             file_hash: it.file_hash,
             content_fingerprint: it.content_fingerprint,
             submitted_by_name: submitterName || undefined,

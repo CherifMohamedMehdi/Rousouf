@@ -19,16 +19,18 @@ import { getOrganizations } from '@/lib/directus/organizations';
 import { isLocale } from '@/lib/i18n/config';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'submit' });
   return { title: t('title'), description: t('subtitle') };
 }
 
-export default async function SubmitPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function SubmitPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 

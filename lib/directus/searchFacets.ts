@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { isMockMode } from './client';
 import { getDocuments } from './documents';
 import { getDocumentTypes, getGovernorates, getLanguages, getThemes } from './taxonomies';
-import { getOrganizations } from './organizations';
+import { getOrganizationsForSearchFacets } from './organizations';
 import type { Locale } from '@/lib/i18n/config';
 import { pickLabel, pickLocalizedName } from '@/lib/i18n/taxonomy';
 import { inferDynamicFacetsFromDocuments, type SearchFacet } from '@/lib/search/facets';
@@ -12,7 +12,7 @@ export async function getSearchFacets(locale: Locale): Promise<SearchFacet[]> {
   const [themes, types, organizations, governorates, languages, t] = await Promise.all([
     getThemes(),
     getDocumentTypes(),
-    getOrganizations(),
+    getOrganizationsForSearchFacets(),
     getGovernorates(),
     getLanguages(),
     getTranslations({ locale, namespace: 'search.filters' }),
@@ -87,10 +87,15 @@ export async function getSearchFacets(locale: Locale): Promise<SearchFacet[]> {
     }
   }
 
-  // Dynamic facet discovery enables zero-code filters for future metadata fields.
+  // Dynamic facet discovery loads documents — off by default (use `search_facets` rows instead).
+  if (process.env.INFER_SEARCH_FACETS_FROM_DOCS !== 'true') {
+    return coreFacets;
+  }
+
   const docs = (await getDocuments({ limit: 10000, status: 'published' })).items;
-  const dynamic = inferDynamicFacetsFromDocuments(docs, locale)
-    .filter((facet) => !coreFacets.some((core) => core.sourceField === facet.sourceField || core.paramKey === facet.paramKey));
+  const dynamic = inferDynamicFacetsFromDocuments(docs, locale).filter(
+    (facet) => !coreFacets.some((core) => core.sourceField === facet.sourceField || core.paramKey === facet.paramKey),
+  );
 
   return [...coreFacets, ...dynamic];
 }

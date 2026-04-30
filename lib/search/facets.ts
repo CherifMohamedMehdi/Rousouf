@@ -30,6 +30,7 @@ const EXCLUDED_FIELDS = new Set([
   'status',
   'supersedes',
   'superseded_by',
+  'source_url',
 ]);
 
 const RESERVED_PARAM_KEYS = new Set(['themes', 'types', 'orgs', 'governorates', 'languages']);

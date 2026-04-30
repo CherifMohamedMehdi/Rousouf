@@ -32,26 +32,29 @@ import { parseSearchParams } from '@/lib/search/urlParams';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'search' });
   return { title: t('title') };
 }
 
 export default async function SearchPage({
-  params: { locale },
+  params,
   searchParams,
 }: {
-  params: { locale: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 
-  const parsed = parseSearchParams(searchParams);
+  const parsed = parseSearchParams(resolvedSearchParams);
   const tSearch = await getTranslations('search');
 
   const [facets, stats] = await Promise.all([
@@ -73,6 +76,7 @@ export default async function SearchPage({
       dynamicFilters: parsed.dynamicFilters,
       limit: parsed.pageSize,
       offset: parsed.offset,
+      listSort: parsed.sort,
     });
   } else {
     const page = await getDocuments({

@@ -27,6 +27,8 @@ export function formatBibtex(doc: Document): string {
   if (year) lines.push(`  year = {${year}},`);
   if (month) lines.push(`  month = {${month}},`);
   if (keywords) lines.push(`  keywords = {${keywords}},`);
+  const original = doc.source_url?.trim();
+  if (original) lines.push(`  howpublished = {\\url{${escape(original)}}},`);
   lines.push(`  url = {${url}}`);
   lines.push('}');
   return lines.join('\n');

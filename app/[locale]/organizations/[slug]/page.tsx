@@ -26,10 +26,11 @@ import Pagination from '@/components/search/Pagination';
 import { PAGE_SIZE } from '@/lib/search/urlParams';
 
 export async function generateMetadata({
-  params: { locale, slug },
+  params,
 }: {
-  params: { locale: string; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
+  const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
   const org = await getOrganizationBySlug(slug);
   if (!org) return {};
@@ -45,19 +46,24 @@ export async function generateMetadata({
 }
 
 export default async function OrganizationPage({
-  params: { locale, slug },
+  params,
   searchParams,
 }: {
-  params: { locale: string; slug: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { locale, slug } = await params;
+  const resolvedSearchParams = await searchParams;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 
   const org = await getOrganizationBySlug(slug);
   if (!org) notFound();
 
-  const page = Math.max(1, Number(typeof searchParams.page === 'string' ? searchParams.page : 1) || 1);
+  const page = Math.max(
+    1,
+    Number(typeof resolvedSearchParams.page === 'string' ? resolvedSearchParams.page : 1) || 1,
+  );
   const tOrg = await getTranslations('organization');
 
   const orgName = pickLocalizedName(org, locale as Locale) || org.name;

@@ -25,6 +25,13 @@ export type DonationStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 export type ContactStatus = 'new' | 'read' | 'replied' | 'archived';
 export type LeadStatus = 'new' | 'contacted' | 'converted' | 'archived';
 export type DocumentFileKind = 'main' | 'executive_summary' | 'annex' | 'dataset';
+export type PdfPublicDisplayMode = 'auto' | 'original' | 'optimized';
+export type DocumentFileOptimizationStatus =
+  | 'pending'
+  | 'processing'
+  | 'ready'
+  | 'failed'
+  | 'skipped';
 export type PartnerTier = 'strategic' | 'supporting' | 'media';
 export type DonationFrequency = 'one_time' | 'monthly';
 
@@ -102,6 +109,10 @@ export interface DocumentFile {
   document: ID;
   file: DirectusFile;
   kind: DocumentFileKind;
+  optimized_file?: DirectusFile | null;
+  optimization_status?: DocumentFileOptimizationStatus;
+  optimization_error?: string | null;
+  optimized_at?: ISODateTime | null;
   label_ar?: string;
   label_fr?: string;
   label_en?: string;
@@ -113,6 +124,11 @@ export interface Document {
   title: string;
   author?: string;
   organization?: Organization | null;
+  /**
+   * What public visitors receive for viewer + download URLs: see `resolvePublicPdfFile`.
+   * Default **`auto`** in Directus (`scripts/seed.ts`).
+   */
+  pdf_public_display: PdfPublicDisplayMode;
   date_published?: ISODate | null;
   abstract_original?: string;
   abstract_translations?: LocalizedText;
@@ -121,6 +137,8 @@ export interface Document {
   document_type?: DocumentType | null;
   governorates: Governorate[];
   keywords: string[];
+  /** Canonical URL of the document on the publisher's site, when known. */
+  source_url?: string | null;
   supersedes?: { id: ID; title: string } | null;
   superseded_by?: { id: ID; title: string } | null;
   files: DocumentFile[];
@@ -189,6 +207,8 @@ export interface Submission {
   document_type?: ID | null;
   governorates: ID[];
   keywords: string[];
+  /** Original publisher URL, if supplied by the contributor. */
+  source_url?: string | null;
   file_hash: string;
   content_fingerprint: string;
   file_url?: string;

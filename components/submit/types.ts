@@ -33,6 +33,8 @@ export interface SubmitItemMetadata {
   themes: string[];
   governorates: string[];
   keywords: string;
+  /** Optional publisher / original document URL (`https` preferred). */
+  source_url: string;
   auto: {
     title?: boolean;
     language?: boolean;
@@ -65,6 +67,7 @@ export function emptyMetadata(): SubmitItemMetadata {
     themes: [],
     governorates: [],
     keywords: '',
+    source_url: '',
     auto: {},
   };
 }

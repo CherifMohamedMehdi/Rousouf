@@ -10,15 +10,16 @@ import { notFound } from 'next/navigation';
 
 export const revalidate = 600;
 
-export async function GET(_req: Request, { params }: { params: { locale: string } }) {
-  if (!isLocale(params.locale)) notFound();
+export async function GET(_req: Request, { params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
   const { items } = await getDocuments({ status: 'published', sort: 'recent', limit: 50 });
   const xml = renderAtomFeed({
-    id: absoluteUrl(`/${params.locale}/feed.atom`),
+    id: absoluteUrl(`/${locale}/feed.atom`),
     title: 'Roufouf — latest documents',
-    selfUrl: absoluteUrl(`/${params.locale}/feed.atom`),
-    htmlUrl: `${siteUrl()}/${params.locale}/search`,
-    locale: params.locale as Locale,
+    selfUrl: absoluteUrl(`/${locale}/feed.atom`),
+    htmlUrl: `${siteUrl()}/${locale}/search`,
+    locale: locale as Locale,
     documents: items,
   });
   return new Response(xml, {

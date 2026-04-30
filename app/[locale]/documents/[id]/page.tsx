@@ -24,6 +24,7 @@ import { setRequestLocale, getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
 import { getDocumentById, getRelatedByOrganization, getRelatedByTheme } from '@/lib/directus/documents';
+import { resolvePublicPdfFile } from '@/lib/pdf/resolvePublicPdfFile';
 import { getLanguages } from '@/lib/directus/taxonomies';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { pickLabel, pickLocalizedAbstract, pickLocalizedName, suggestableAbstractField } from '@/lib/i18n/taxonomy';
@@ -43,10 +44,11 @@ import SuggestTranslationButton from '@/components/documents/SuggestTranslationB
 import { Download, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 export async function generateMetadata({
-  params: { locale, id },
+  params,
 }: {
-  params: { locale: string; id: string };
+  params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
+  const { locale, id } = await params;
   if (!isLocale(locale)) return {};
   const doc = await getDocumentById(id);
   if (!doc) return {};
@@ -70,10 +72,11 @@ export async function generateMetadata({
 }
 
 export default async function DocumentPage({
-  params: { locale, id },
+  params,
 }: {
-  params: { locale: string; id: string };
+  params: Promise<{ locale: string; id: string }>;
 }) {
+  const { locale, id } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const doc = await getDocumentById(id);
@@ -84,6 +87,7 @@ export default async function DocumentPage({
   const abstractSuggest = suggestableAbstractField(doc, locale);
   const year = yearOf(doc.date_published);
   const mainFile = doc.files.find((f) => f.kind === 'main') ?? doc.files[0];
+  const mainPublicPdf = mainFile ? resolvePublicPdfFile(doc, mainFile) : null;
   const orgName = doc.organization ? pickLocalizedName(doc.organization, locale) : '';
 
   const [byOrg, byTheme, languages] = await Promise.all([
@@ -178,8 +182,8 @@ export default async function DocumentPage({
             </p>
           </section>
 
-          {mainFile ? (
-            <PdfViewer fileUrl={mainFile.file.url} filename={mainFile.file.filename} title={doc.title} />
+          {mainFile && mainPublicPdf ? (
+            <PdfViewer fileUrl={mainPublicPdf.url} filename={mainPublicPdf.filename} title={doc.title} />
           ) : null}
 
           <section aria-labelledby="metadata-heading">
@@ -313,10 +317,13 @@ export default async function DocumentPage({
               />
             </div>
             <ul className="mt-3 space-y-2">
-              {doc.files.map((f) => (
+              {doc.files.map((f) => {
+                const pub = resolvePublicPdfFile(doc, f);
+                const labelFallback = pub.filename ?? f.file.filename;
+                return (
                 <li key={f.id}>
                   <a
-                    href={f.file.url}
+                    href={pub.url}
                     download
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white px-3 py-2 text-sm hover:border-brand-blue hover:text-brand-blue"
                   >
@@ -325,12 +332,13 @@ export default async function DocumentPage({
                         (f.kind === 'executive_summary' && tDoc('executiveSummary')) ||
                         (f.kind === 'annex' && tDoc('annex')) ||
                         (f.kind === 'dataset' && tDoc('dataset')) ||
-                        f.file.filename}
+                        labelFallback}
                     </span>
                     <Download size={14} aria-hidden="true" />
                   </a>
                 </li>
-              ))}
+              );
+              })}
             </ul>
           </section>
         </aside>

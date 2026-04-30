@@ -13,25 +13,26 @@ export const revalidate = 600;
 
 export async function GET(
   _req: Request,
-  { params }: { params: { locale: string; slug: string } },
+  { params }: { params: Promise<{ locale: string; slug: string }> },
 ) {
-  if (!isLocale(params.locale)) notFound();
-  const theme = await getThemeBySlug(params.slug);
+  const { locale, slug } = await params;
+  if (!isLocale(locale)) notFound();
+  const theme = await getThemeBySlug(slug);
   if (!theme) notFound();
 
   const { items } = await getDocuments({
     status: 'published',
-    themeSlugs: [params.slug],
+    themeSlugs: [slug],
     sort: 'recent',
     limit: 50,
   });
 
   const xml = renderAtomFeed({
-    id: absoluteUrl(`/${params.locale}/themes/${params.slug}/feed.atom`),
-    title: `Roufouf — ${pickLabel(theme, params.locale as Locale)}`,
-    selfUrl: absoluteUrl(`/${params.locale}/themes/${params.slug}/feed.atom`),
-    htmlUrl: `${siteUrl()}/${params.locale}/search?themes=${encodeURIComponent(params.slug)}`,
-    locale: params.locale as Locale,
+    id: absoluteUrl(`/${locale}/themes/${slug}/feed.atom`),
+    title: `Roufouf — ${pickLabel(theme, locale as Locale)}`,
+    selfUrl: absoluteUrl(`/${locale}/themes/${slug}/feed.atom`),
+    htmlUrl: `${siteUrl()}/${locale}/search?themes=${encodeURIComponent(slug)}`,
+    locale: locale as Locale,
     documents: items,
   });
   return new Response(xml, {

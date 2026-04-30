@@ -259,6 +259,20 @@ export default function SubmitItemEditor({
           }
         />
         <Field
+          label={t('fields.sourceUrl')}
+          fullWidth
+          input={
+            <input
+              type="url"
+              inputMode="url"
+              placeholder="https://"
+              value={m.source_url}
+              onChange={(e) => onChange(item.id, { source_url: e.target.value })}
+              className={inputCls}
+            />
+          }
+        />
+        <Field
           label={t('fields.abstract')}
           fullWidth
           input={

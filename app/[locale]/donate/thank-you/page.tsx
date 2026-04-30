@@ -20,27 +20,31 @@ import { Heart } from 'lucide-react';
 import { isLocale } from '@/lib/i18n/config';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'donate.thankYou' });
   return { title: t('title'), robots: { index: false } };
 }
 
 export default async function DonateThankYouPage({
-  params: { locale },
+  params,
   searchParams,
 }: {
-  params: { locale: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 
   const t = await getTranslations('donate');
-  const reference = typeof searchParams.reference === 'string' ? searchParams.reference : undefined;
+  const reference =
+    typeof resolvedSearchParams.reference === 'string' ? resolvedSearchParams.reference : undefined;
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 py-16 text-center">

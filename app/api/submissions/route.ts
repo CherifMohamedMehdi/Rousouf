@@ -20,6 +20,7 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rateLimit'
 import { failsHoneypot, HONEYPOT_FIELD } from '@/lib/honeypot';
 import type { LocalizedText } from '@/types/directus';
 import { sendNotification } from '@/lib/notifications';
+import { normalizeOptionalSourceUrl } from '@/lib/validation/sourceUrl';
 
 interface Body {
   title: string;
@@ -66,6 +67,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'abstract_too_long' }, { status: 400 });
   }
 
+  const source_url = normalizeOptionalSourceUrl(body.source_url);
+  if (body.source_url != null && String(body.source_url).trim() && source_url === null) {
+    return NextResponse.json({ error: 'invalid_source_url' }, { status: 400 });
+  }
+
   const saved = await createSubmission({
     title: body.title.trim(),
     author: body.author,
@@ -78,6 +84,7 @@ export async function POST(req: Request) {
     document_type: body.document_type ?? null,
     governorates: body.governorates ?? [],
     keywords: body.keywords ?? [],
+    source_url: source_url ?? undefined,
     file_hash: body.file_hash,
     content_fingerprint: body.content_fingerprint,
     file_url: body.file_url,

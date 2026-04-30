@@ -227,7 +227,10 @@ The main record.
 | `document_type`         | M2O → `document_types`       | no       |                                                                                                                |
 | `governorates`          | M2M → `governorates`         | no       | Via `documents_governorates` junction.                                                                         |
 | `keywords`              | json (array of string)       | no       | Free-text tags. Normalized lowercase for search but displayed as entered.                                      |
+| `source_url`            | string                       | no       | Canonical URL of the document on the publisher's site (https preferred). Shown on the detail page when set.   |
 | `supersedes`            | M2O → `documents` (self-ref) | no       | The document this one replaces. The superseded document shows a "newer version" banner linking here.           |
+| `pdf_public_display`    | string (enum)                | yes      | `auto \| original \| optimized`. Default **`auto`**. Controls which PDF asset the **public** site uses for the viewer and download links (original vs machine-optimized derivative). See **§5.1.1**. Does **not** affect the background optimizer: derivatives are produced regardless so editors can switch modes. |
+| `files`                  | json (array)                  | yes      | Attached PDF slots for this deployment (stored as JSON on the row; see **`scripts/seed.ts`**). Canonical publisher file per slot lives in **`file`**; **`optimized_file`** holds an optional derivative. See **§5.1.1**.                         |
 | `file_hash`             | string (hex)                 | yes      | SHA-256 of the primary file. Used for exact-duplicate detection.                                               |
 | `content_fingerprint`   | text                         | yes      | Normalized first 2,000 words of extracted PDF text. Used for fuzzy-duplicate detection via `pg_trgm`.          |
 | `status`                | enum                         | yes      | `pending \| published \| rejected \| archived`. Default `pending`.                                             |
@@ -239,6 +242,32 @@ The main record.
 
 - `documents_themes` (`document_id`, `theme_id`)
 - `documents_governorates` (`document_id`, `governorate_id`)
+
+#### 5.1.1 `files` JSON slots (stored on `documents`)
+
+For the seeded schema, attachments are **`documents.files`**: an array of objects. Dedup hashes on the **`documents`** row (`file_hash`, `content_fingerprint`) remain tied to the **publisher original** ingestion only; optimizing does not rewrite them.
+
+Each element may include:
+
+| Key | Type | Notes |
+| --- | ---- | ----- |
+| `id` | string | Stable slot id (e.g. `docfile-…`). |
+| `kind` | string | `main \| executive_summary \| annex \| dataset` (must match **`DocumentFileKind`** in `types/directus.ts`). Exactly one **`main`** per document. |
+| `file` | object | Required. Original PDF as a **`directus_files`** projection: **`id`**, **`url`**, **`filename`**, **`mime_type`**, … |
+| `optimized_file` | object | Optional. Compressed derivative (**`POST /files`**); same projection shape as **`file`** for parity. Both ids appear in Admin → File Library. |
+| `optimization_status` | string | **`pending`** \| **`processing`** \| **`ready`** \| **`failed`** \| **`skipped`**. Workflow field written by **`pdf-optimize-worker`**. Missing on legacy rows ⇒ treat as **`pending`** for eligibility. |
+| `optimization_error` | string \| null | Short diagnostic when **`failed`**. |
+| `optimized_at` | ISO8601 string | Optional. Set when a derivative becomes **`ready`**. |
+| `label_ar` / `label_fr` / `label_en` | string | Optional display labels per locale. |
+
+**Public resolution** applies **`documents.pdf_public_display`** to each slot (`auto` prefers **`optimized_file`** when **`optimization_status === 'ready'`**, else **`original`** (`file`); other modes are described in **`resolvePublicPdfFile`**, `lib/pdf/resolvePublicPdfFile.ts`).
+
+**Directus admin (MVP)**
+
+- **`pdf_public_display`** — Dropdown: *Automatic (optimized when ready)* ⇒ `auto`; *Always show original PDF* ⇒ `original`; *Prefer optimized (fallback to original)* ⇒ `optimized`.
+- **`files`** — Field Note: **`file`** = publisher-original PDF; **`optimized_file`** (when present) = machine derivative; **`optimization_*`** slots are maintained by **`pdf-optimize-worker`**. Editors can edit JSON for labels and slot ids; uploads use standard File flows.
+
+Relational **`document_files`** (§5.2 below) describes an alternative normalized shape **not** used by this app’s seeded Directus wiring.
 
 ### 5.2 `document_files`
 
@@ -352,7 +381,7 @@ metadata.
 
 | Field                   | Type                         | Required | Notes                                                                 |
 | ----------------------- | ---------------------------- | -------- | --------------------------------------------------------------------- |
-| All fields from `documents`  | ...                     | ...      | Except `status` (see below).                                           |
+| All fields from `documents`  | ...                     | ...      | Except `status` (see below). Includes optional `source_url` like `documents`.                                   |
 | `submitted_by_name`     | string                       | no       |                                                                       |
 | `submitted_by_email`    | string                       | no       |                                                                       |
 | `submitted_by_org`      | string                       | no       | Free-text; admins promote to a real `organizations` row on approval.   |
@@ -616,9 +645,21 @@ CREATE INDEX IF NOT EXISTS donations_public_view_idx
 
 -- Status filters hit constantly.
 CREATE INDEX IF NOT EXISTS documents_status_idx ON documents (status);
+CREATE INDEX IF NOT EXISTS documents_date_published_idx ON documents (date_published);
 CREATE INDEX IF NOT EXISTS submissions_status_idx ON submissions (status);
 CREATE INDEX IF NOT EXISTS suggestions_status_idx ON suggestions (status);
 ```
+
+### Hosting and transport (operational checklist)
+
+These are outside the Next.js codebase but reduce latency and bytes on the wire:
+
+- Enable **Brotli** or **gzip** and **HTTP/2** (or HTTP/3) on the reverse proxy in front of the app and Directus.
+- Cache immutable static assets (`/_next/static/*`) and public Directus assets at a **CDN** or edge when URLs are stable.
+- Run Postgres, Directus, Meilisearch, and the Next.js app in the **same region** with enough RAM; keep read replicas only if measured need.
+- After adding API filters on `documents`, confirm **btree indexes** exist on every column used in heavy `filter[...]` paths (see `documents_status_idx` / `documents_date_published_idx` above).
+
+**Search facets.** Prefer active rows in the `search_facets` collection for sidebar filters. Set `INFER_SEARCH_FACETS_FROM_DOCS=true` only when you intentionally want the app to scan documents for extra dynamic facets (adds load).
 
 ### Similarity threshold
 

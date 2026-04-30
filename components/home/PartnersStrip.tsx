@@ -66,7 +66,6 @@ export default async function PartnersStrip() {
                         className="group flex h-14 items-center px-3"
                       >
                         {p.logo?.url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={p.logo.url}
                             alt={p.name}

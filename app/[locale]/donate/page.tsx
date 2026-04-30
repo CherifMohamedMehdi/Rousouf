@@ -22,16 +22,18 @@ import { isLocale } from '@/lib/i18n/config';
 import type { ImpactCallout } from '@/types/directus';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'donate' });
   return { title: t('title'), description: t('intro') };
 }
 
-export default async function DonatePage({ params: { locale } }: { params: { locale: string } }) {
+export default async function DonatePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
 

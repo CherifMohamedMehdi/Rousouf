@@ -3,6 +3,7 @@
  * <JsonLd> client component serializes it into a <script> tag.
  */
 import type { Document, Organization } from '@/types/directus';
+import { resolvePublicPdfFile } from '@/lib/pdf/resolvePublicPdfFile';
 import type { Locale } from '@/lib/i18n/config';
 import { siteUrl, absoluteUrl } from '@/lib/utils';
 import { pickLocalizedAbstract, pickLocalizedName } from '@/lib/i18n/taxonomy';
@@ -73,7 +74,7 @@ export function documentJsonLd(doc: Document, locale: Locale) {
     encoding: doc.files?.length
       ? doc.files.map((f) => ({
           '@type': 'MediaObject',
-          contentUrl: absoluteUrl(f.file.url),
+          contentUrl: absoluteUrl(resolvePublicPdfFile(doc, f).url),
           encodingFormat: 'application/pdf',
         }))
       : undefined,

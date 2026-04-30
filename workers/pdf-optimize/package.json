@@ -1,0 +1,13 @@
+{
+  "name": "pdf-optimize-worker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Background PDF compression for Roufouf (Directus documents.files[])",
+  "main": "index.cjs",
+  "scripts": {
+    "start": "node index.cjs"
+  },
+  "dependencies": {
+    "pg-boss": "^12.18.1"
+  }
+}

@@ -93,9 +93,11 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'document_type', type: 'string' },
     { field: 'governorates', type: 'json' },
     { field: 'keywords', type: 'json' },
+    { field: 'source_url', type: 'string' },
     { field: 'supersedes', type: 'json' },
     { field: 'superseded_by', type: 'json' },
     { field: 'files', type: 'json' },
+    { field: 'pdf_public_display', type: 'string' },
     { field: 'file_hash', type: 'text' },
     { field: 'content_fingerprint', type: 'text' },
     { field: 'status', type: 'string' },
@@ -254,6 +256,7 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'document_type', type: 'string' },
     { field: 'governorates', type: 'json' },
     { field: 'keywords', type: 'json' },
+    { field: 'source_url', type: 'string' },
     { field: 'file_hash', type: 'text' },
     { field: 'content_fingerprint', type: 'text' },
     { field: 'file_url', type: 'string' },
@@ -462,6 +465,55 @@ async function ensureSchema(token: string) {
     for (const field of FIELD_DEFS[collection.name] ?? []) {
       await ensureField(token, collection.name, field);
     }
+  }
+}
+
+/** After fields exist — select dropdown + Notes (Idempotent PATCH; warn on older Directus quirks). */
+async function ensureDocumentsPdfOptimizationHints(token: string) {
+  const pdfPatch = await fetch(`${DIRECTUS_URL}/fields/documents/pdf_public_display`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      meta: {
+        interface: 'select-dropdown',
+        width: 'full',
+        options: {
+          choices: [
+            { text: 'Automatic (optimized when ready)', value: 'auto' },
+            { text: 'Always show original PDF', value: 'original' },
+            { text: 'Prefer optimized (fallback to original)', value: 'optimized' },
+          ],
+        },
+        note: 'Visitors see originals vs optimized derivatives according to this value. Worker still produces derivatives.',
+      },
+      schema: { default_value: 'auto' },
+    }),
+  });
+  if (pdfPatch.ok) {
+    console.log('+ documents.pdf_public_display Directus hints');
+  } else {
+    console.warn('PATCH documents.pdf_public_display:', pdfPatch.status, await pdfPatch.text());
+  }
+
+  const filesPatch = await fetch(`${DIRECTUS_URL}/fields/documents/files`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      meta: {
+        note: '`file` = publisher-original PDF (`directus_files`). `optimized_file` = worker derivative when present; `optimization_status` tracks the job.',
+      },
+    }),
+  });
+  if (filesPatch.ok) {
+    console.log('+ documents.files Directus field note');
+  } else {
+    console.warn('PATCH documents.files:', filesPatch.status, await filesPatch.text());
   }
 }
 
@@ -723,6 +775,12 @@ async function upsertItem(token: string, collection: string, item: DirectusItem,
 }
 
 function normalizeDocument(doc: (typeof mockDocuments)[number]): DirectusItem {
+  const pdf =
+    doc.pdf_public_display === 'original' ||
+    doc.pdf_public_display === 'optimized' ||
+    doc.pdf_public_display === 'auto'
+      ? doc.pdf_public_display
+      : 'auto';
   return {
     ...doc,
     organization: doc.organization?.id ?? null,
@@ -730,6 +788,7 @@ function normalizeDocument(doc: (typeof mockDocuments)[number]): DirectusItem {
     document_type: doc.document_type?.id ?? null,
     themes: doc.themes.map((x) => x.id),
     governorates: doc.governorates.map((x) => x.id),
+    pdf_public_display: pdf,
   };
 }
 
@@ -948,6 +1007,7 @@ async function main() {
   await waitForDirectus();
   const adminToken = await loginAsAdmin();
   await ensureSchema(adminToken);
+  await ensureDocumentsPdfOptimizationHints(adminToken);
   const publicRole = await ensurePublicPermissions(adminToken);
   await ensureStaffPermissions(adminToken);
   await ensureOpsPresets(adminToken);
