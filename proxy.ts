@@ -1,5 +1,5 @@
 /**
- * Routing + locale middleware.
+ * Routing + locale proxy (replaces deprecated middleware.ts in Next 16).
  *
  * Responsibilities:
  * - Redirect "/" to the user's preferred locale (persisted in a cookie, or
