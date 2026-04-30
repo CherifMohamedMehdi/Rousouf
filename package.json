@@ -3,18 +3,15 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "dev": "pnpm --filter roufouf dev",
-    "build": "pnpm --filter roufouf build",
-    "start": "pnpm --filter roufouf start",
-    "lint": "pnpm --filter roufouf lint",
-    "typecheck": "pnpm --filter roufouf typecheck",
-    "seed": "pnpm --filter roufouf seed",
+    "dev": "pnpm --dir apps/web dev",
+    "build": "pnpm --dir apps/web build",
+    "start": "pnpm --dir apps/web start",
+    "lint": "pnpm --dir apps/web lint",
+    "typecheck": "pnpm --dir apps/web typecheck",
+    "seed": "pnpm --dir apps/web seed",
     "stack:up": "docker compose up -d",
     "stack:down": "docker compose down",
     "stack:reset": "docker compose down -v && docker compose up -d",
-    "worker:pdf": "pnpm --filter pdf-optimize-worker start"
-  },
-  "devDependencies": {
-    "next": "16.2.0"
+    "worker:pdf": "pnpm --dir workers/pdf-optimize start"
   }
 }
