@@ -56,9 +56,15 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'meta' });
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrlRaw = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  let metadataBase: URL;
+  try {
+    metadataBase = new URL(siteUrlRaw);
+  } catch {
+    metadataBase = new URL('http://localhost:3000');
+  }
   return {
-    metadataBase: new URL(siteUrl),
+    metadataBase,
     title: {
       default: `${t('siteName')} — ${t('tagline')}`,
       template: `%s · ${t('siteName')}`,
