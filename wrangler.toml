@@ -1,4 +1,4 @@
-name = "roufouf-web"
+name = "rousouf"
 main = "apps/web/.vercel/output/static/_worker.js/index.js"
 compatibility_date = "2026-04-30"
 compatibility_flags = ["nodejs_compat"]
