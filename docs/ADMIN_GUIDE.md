@@ -190,6 +190,81 @@ Fill `name`, `role` (localized), `bio` (localized), optional `photo`, optional
 `linkedin_url`, and `sort_order`. Only records with **is_active = true** show
 up on the About page.
 
+### Site branding (logo and colors) — all from Directus
+
+You never need to edit project files or hosting env vars for the **shared
+secret** once the site is deployed. Everything you control day to day happens
+inside Directus.
+
+#### 1. One-time hosting note (not Directus)
+
+The public website still needs **`DIRECTUS_ADMIN_TOKEN`** on the server so it
+can call Directus as an admin when a Flow hits the branding API. That token is
+set **once** by whoever deploys the app (not by content editors). The **webhook
+secret** itself lives **only** in Directus below.
+
+#### 2. Configure Ops Settings (secret + live site URL)
+
+1. Open **`Content → Ops Settings`** (singleton).
+2. Set **Branding webhook secret** to a long random string (password manager).
+3. Set **Site base URL** (`branding_site_base_url`) to the public Next.js origin
+   **without a trailing slash**, e.g. `https://roufouf.tn` or
+   `http://localhost:3000`. Seed uses `NEXT_PUBLIC_SITE_URL` or
+   `BRANDING_SITE_BASE_URL` on first provision; afterward you maintain it here.
+4. Save.
+
+Running **`pnpm seed`** creates three ready-made **Flows** (if your Directus
+version supports Flow API):
+
+| Flow | Effect |
+| ---- | ------- |
+| **Roufouf: Publish branding to website** | Reads Ops Settings → `POST …/publish-branding` |
+| **Roufouf: Revert branding** | Reads Ops Settings → `POST …/revert-branding` |
+| **Roufouf: Revalidate branding cache** | Reads Ops Settings → `POST …/revalidate-branding` |
+
+Each flow uses the [data chain](https://directus.io/docs/guides/automate/data-chain):
+
+- Item read (**key `read_ops`**) loads `ops_settings` with **`$full`** permissions.
+- The **Request URL** header is `{{ read_ops.branding_webhook_secret }}` — no duplicate secret in Flow config.
+- The **URL** is `{{ read_ops.branding_site_base_url }}/api/admin/…` — stays in sync when you change Ops Settings.
+
+Run the Flow from **`Content → Branding Settings`** (open the singleton item → **Flows** dropdown / action). Updating secret or URL in Ops Settings affects the **next** run automatically.
+
+Disable flow seed with env **`SKIP_BRANDING_FLOW_SEED=1`** during `pnpm seed` if Flow creation fails (e.g. older Directus); see §5 for manual equivalents.
+
+The Next.js app reads the webhook secret from Ops automatically when `BRANDING_WEBHOOK_SECRET` is
+not set in the server environment. Never put secrets in `NEXT_PUBLIC_*`.
+
+#### 3. Edit draft branding
+
+**`Content → Branding Settings`** has two layers:
+
+- **Draft** — **Logo** and the five color fields (no `published_` prefix). Safe
+  to experiment; the live site ignores them until you publish.
+- **Published** — `published_*` fields. The website reads **only** these.
+
+#### 4. Publish via seeded Flow
+
+Use **`Roufouf: Publish branding to website`** after saving draft colors/logo.
+Optional header **x-branding-actor**: add another **Request URL** header in the
+seeded flow inside Directus only if your team cares about auditing by person.
+
+#### 5. Manual Flow setup (if seed did not create flows)
+
+Duplicate the pattern from above: **Manual** trigger → **Read Data** operation
+`singleton ops_settings`, key `read_ops`, permissions **`$full`** → **Request
+URL**:
+
+- POST `{{ read_ops.branding_site_base_url }}/api/admin/publish-branding` (and
+  parallel flows for revert / revalidate),
+- Headers: `x-branding-secret: {{ read_ops.branding_webhook_secret }}`.
+
+#### 6. Alternative: mutate `branding_settings` entirely in Directus
+
+Use **Update Data** to copy draft → published and maintain snapshots yourself,
+then run **Roufouf: Revalidate branding cache** (or equivalent `revalidate-branding`)
+so Next.js refreshes caches.
+
 ---
 
 ## 8. Donation tiers and leads

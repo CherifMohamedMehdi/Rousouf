@@ -56,7 +56,7 @@ async function run() {
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
-    if (url.endsWith('/items/ops_settings')) {
+    if (url.includes('/items/ops_settings')) {
       return new Response(
         JSON.stringify({
           data: {

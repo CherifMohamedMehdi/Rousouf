@@ -18,8 +18,24 @@
 @tailwind utilities;
 
 :root {
-  --background: #f7f5f0;
-  --foreground: #1a1a1a;
+  --brand-blue-rgb: 27 63 110;
+  --brand-blue-dark-rgb: 20 46 82;
+  --brand-blue-soft-rgb: 234 240 248;
+  --brand-gold-rgb: 201 149 42;
+  --brand-gold-dark-rgb: 156 114 32;
+  --brand-gold-soft-rgb: 247 238 216;
+  --brand-paper-rgb: 247 245 240;
+  --brand-paper-soft-rgb: 251 250 246;
+  --brand-ink-rgb: 26 26 26;
+  --brand-ink-soft-rgb: 74 74 74;
+  --brand-teal-rgb: 42 123 111;
+  --brand-teal-soft-rgb: 222 239 236;
+  --background-rgb: 247 245 240;
+  --foreground-rgb: 26 26 26;
+  --muted-rgb: 239 237 230;
+  --muted-foreground-rgb: 74 74 74;
+  --border-rgb: 228 224 214;
+  --ring-rgb: 201 149 42;
 }
 
 html {
@@ -31,8 +47,8 @@ html[dir="rtl"] body {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
   font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

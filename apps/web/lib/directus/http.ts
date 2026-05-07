@@ -56,14 +56,21 @@ export async function directusListItemsWithMeta<T = Record<string, unknown>>(
   return { data: json.data ?? [], meta: json.meta ?? {} };
 }
 
-export async function directusGetSingleton<T>(collection: string): Promise<T | null> {
+export async function directusGetSingleton<T>(
+  collection: string,
+  options?: { fields?: string },
+): Promise<T | null> {
+  const fieldsParam = options?.fields ? `?fields=${encodeURIComponent(options.fields)}` : '';
   try {
-    const json = await directusGetJson<{ data: T }>(`/items/${collection}`);
+    const json = await directusGetJson<{ data: T }>(`/items/${collection}${fieldsParam}`);
     if (json?.data) return json.data;
   } catch {
     // Fallback to list query for non-singleton-like endpoints.
   }
-  const rows = await directusListItems<T>(collection, { limit: '1', fields: '*' });
+  const rows = await directusListItems<T>(collection, {
+    limit: '1',
+    fields: options?.fields ?? '*',
+  });
   return rows[0] ?? null;
 }
 

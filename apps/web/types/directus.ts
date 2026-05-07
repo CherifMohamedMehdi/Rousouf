@@ -349,6 +349,36 @@ export interface PagesSingleton {
   social_youtube?: string;
 }
 
+export interface BrandingSnapshot {
+  logo?: DirectusFile | null;
+  primary_color: string;
+  secondary_color: string;
+  background_color: string;
+  text_color: string;
+  border_color: string;
+}
+
+export interface BrandingSettings {
+  id: number;
+  logo?: DirectusFile | null;
+  primary_color?: string;
+  secondary_color?: string;
+  background_color?: string;
+  text_color?: string;
+  border_color?: string;
+  published_logo?: DirectusFile | null;
+  published_primary_color?: string;
+  published_secondary_color?: string;
+  published_background_color?: string;
+  published_text_color?: string;
+  published_border_color?: string;
+  previous_published_snapshot?: BrandingSnapshot | null;
+  last_published_at?: ISODateTime | null;
+  last_published_by?: string | null;
+  last_reverted_at?: ISODateTime | null;
+  last_reverted_by?: string | null;
+}
+
 export interface SearchFacetDefinition {
   id: ID;
   key: string;

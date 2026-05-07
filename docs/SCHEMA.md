@@ -69,10 +69,12 @@
 | `contact_messages`  | Inbound contact-form messages                           | No                            | Yes           |
 | `team_members`      | People on the About page                                | All                           | No            |
 | `pages`             | Singleton: mission, impact callouts, static copy        | All                           | No            |
+| `branding_settings` | Singleton: draft vs published palette + logo (see §8.3) | Published fields only †            | No            |
 | `partners`          | Institutional supporters/funders                        | `is_active && display_on_homepage` | No        |
 | `donation_tiers`    | Admin-curated suggested donation amounts                | `is_active`                   | No            |
 | `donations`         | Recorded donations (written by payment webhook)         | Strict filtered view only*    | No            |
 | `donation_leads`    | Donation interest captured before payments are live     | No                            | Yes           |
+| `ops_settings`      | Singleton: notifications, backup, **branding webhook secret** | Admin only (recommended)       | No            |
 
 \* The public donors-wall view returns only `public_display_name` (or
 `donor_name` when that is not set) and the month component of `date_created`,
@@ -84,6 +86,8 @@ display_on_homepage = true`. Amount, email, message, provider, and
 (`POST /api/translation-suggestions`) using `DIRECTUS_TOKEN` after uploading
 the PDF to `directus_files`. The Public role has no Directus create access on
 this collection.
+
+† **`branding_settings`:** Public permissions should expose only `published_logo`, `published_*_color`, and `id`. Draft logo and colors remain editor-facing; copying draft → live is triggered by `/api/admin/publish-branding` (see §8.3).
 
 ---
 
@@ -542,19 +546,55 @@ page's "impact" block.
 | `social_facebook`         | string | no       |                                                      |
 | `social_youtube`          | string | no       |                                                      |
 
+### 8.3 `branding_settings` (singleton)
+
+One row. **Draft** columns (`logo`, `primary_color`, …) are edited in Directus by
+admins and do **not** affect the public website until published. **Published**
+columns (`published_logo`, `published_primary_color`, …) are what the Next.js app
+reads. The JSON field **`previous_published_snapshot`** stores the last
+**published** palette + logo (`{ logo?, primary_color, … }`) so admins can revert
+after a mistaken publish via the webhook `POST /api/admin/revert-branding`.
+
+| Field                         | Type     | Required | Notes |
+| ----------------------------- | -------- | -------- | ----- |
+| `id`                          | integer (pk) | auto | Singleton row seeded as `id: 1`. |
+| `logo`                        | File (json\* in seeded stack) | no | Draft site logo — not live until publish. |
+| `primary_color`               | string   | no       | Draft — hex `#RRGGBB` or `#RGB`. |
+| `secondary_color`             | string   | no       | Draft. |
+| `background_color`            | string   | no       | Draft. |
+| `text_color`                  | string   | no       | Draft. |
+| `border_color`                | string   | no       | Draft. |
+| `published_logo`              | File     | no       | Live logo on the website. |
+| `published_primary_color`     | string   | no       | Live. |
+| `published_secondary_color`   | string   | no       | Live. |
+| `published_background_color` | string   | no       | Live. |
+| `published_text_color`        | string   | no       | Live. |
+| `published_border_color`      | string   | no       | Live. |
+| `previous_published_snapshot` | json     | no       | Snapshot of palette + logo **before** last publish/revert swap. |
+| `last_published_at`           | datetime | auto     | Set by Next webhook. |
+| `last_published_by`           | string   | no       | Optional actor label (e.g. header `x-branding-actor`). |
+| `last_reverted_at`            | datetime | auto     | Set by revert webhook. |
+| `last_reverted_by`            | string   | no       | Same as publish. |
+
+\* The Docker seed declares `logo` / `published_logo` as JSON for portability; production can use native File columns.
+
+Publish and revert call the CMS with **`DIRECTUS_ADMIN_TOKEN`**; public site traffic continues to use **`DIRECTUS_TOKEN`** (read scoped).
+
 ---
 
 ## 9. Permissions matrix
 
-| Role         | `documents`                 | `organizations`        | taxonomies | `suggestions`          | `translation_suggestions` | `submissions`          | `contact_messages`     | `partners`                               | `donation_tiers`   | `donations`                           | `donation_leads`       | `team_members` | `pages` | `document_files` |
-| ------------ | --------------------------- | ---------------------- | ---------- | ---------------------- | ------------------------- | ---------------------- | ---------------------- | ---------------------------------------- | ------------------ | ------------------------------------- | ---------------------- | -------------- | ------- | ---------------- |
-| Public       | Read: `status = published`  | Read: `status = active` | Read       | Create                 | No (API + token only)     | Create                 | Create                 | Read: `is_active && display_on_homepage` | Read: `is_active` | Read (filtered public donors view only)\* | Create                 | Read: `is_active` | Read    | Read (linked only) |
-| Editor       | All + status changes        | All                    | All        | Read + update (review) | Read + update (review)    | Read + update (review) | Read + update          | All                                      | All                | Read                                  | Read + update          | All            | Update  | All              |
-| Super-admin  | All + delete                | All + delete           | All + delete | All + delete         | All + delete              | All + delete         | All + delete         | All + delete                             | All + delete      | All + delete                         | All + delete           | All + delete   | All     | All + delete     |
+| Role         | `documents`                 | `organizations`        | taxonomies | `suggestions`          | `translation_suggestions` | `submissions`          | `contact_messages`     | `partners`                               | `donation_tiers`   | `donations`                           | `donation_leads`       | `team_members` | `pages` | `branding_settings` | `document_files` |
+| ------------ | --------------------------- | ---------------------- | ---------- | ---------------------- | ------------------------- | ---------------------- | ---------------------- | ---------------------------------------- | ------------------ | ------------------------------------- | ---------------------- | -------------- | ------- | ------------------- | ---------------- |
+| Public       | Read: `status = published`  | Read: `status = active` | Read       | Create                 | No (API + token only)     | Create                 | Create                 | Read: `is_active && display_on_homepage` | Read: `is_active` | Read (filtered public donors view only)\* | Create                 | Read: `is_active` | Read    | Read (`published_*` only)\*\* | Read (linked only) |
+| Editor       | All + status changes        | All                    | All        | Read + update (review) | Read + update (review)    | Read + update (review) | Read + update          | All                                      | All                | Read                                  | Read + update          | All            | Update  | Update (draft columns)           | All              |
+| Super-admin  | All + delete                | All + delete           | All + delete | All + delete         | All + delete              | All + delete         | All + delete         | All + delete                             | All + delete      | All + delete                         | All + delete           | All + delete   | All     | All                              | All + delete     |
 
 \* Public donors view exposes only `public_display_name || donor_name` and the
 month component of `date_created`. Amount, email, message, provider, and
 `provider_reference` are never exposed.
+
+\*\* **`branding_settings` public role**: expose only **`published_*`** columns and **`id`** to the anonymized/read role backing `DIRECTUS_TOKEN`; keep draft (`logo`, colors without prefix) restricted to Editors and above.
 
 ---
 
@@ -686,6 +726,18 @@ Every collection is configured so the most common actions take one or two
 clicks. What follows is what a Directus administrator sets up in the UI after
 creating the schema. Non-technical staff read `ADMIN_GUIDE.md` for the
 day-to-day version of these workflows.
+
+### `ops_settings` (singleton)
+
+- Admin-only collection in production: notifications, backup tuning, **`branding_site_base_url`** (canonical public origin of the Next.js app **without** trailing slash, e.g. `https://roufouf.tn` — used by seeded **Flows** when building `POST …/api/admin/…` URLs), **`branding_webhook_secret`** (shared secret for Directus Flows calling the
+  Next.js `/api/admin/*-branding` routes). Editors set the secret **in
+  Directus**; avoid duplicating it in `.env` unless you need an override for
+  CI. The Next.js app reads this field with **`DIRECTUS_ADMIN_TOKEN`** when
+  `BRANDING_WEBHOOK_SECRET` is not set.
+- **Field permissions**: never expose **`branding_webhook_secret`** to the Public
+  role or to the anonymized **`DIRECTUS_TOKEN`** user. Other `ops_settings`
+  fields used by the site are requested with an explicit allowlist in code so
+  the public token never receives the webhook secret.
 
 ### Global
 

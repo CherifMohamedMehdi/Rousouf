@@ -18,6 +18,11 @@ const MEILI_KEY = process.env.MEILISEARCH_KEY ?? 'roufouf-dev-master-key';
 const ADMIN_EMAIL = process.env.DIRECTUS_ADMIN_EMAIL ?? 'admin@example.com';
 const ADMIN_PASSWORD = process.env.DIRECTUS_ADMIN_PASSWORD ?? 'roufouf-dev';
 
+function defaultBrandingSiteBaseUrl(): string {
+  const raw = process.env.BRANDING_SITE_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  return raw.replace(/\/$/, '');
+}
+
 const COLLECTIONS: Array<{ name: string; icon?: string; singleton?: boolean }> = [
   { name: 'themes', icon: 'category' },
   { name: 'document_types', icon: 'description' },
@@ -34,6 +39,7 @@ const COLLECTIONS: Array<{ name: string; icon?: string; singleton?: boolean }> =
   { name: 'donation_leads', icon: 'contact_mail' },
   { name: 'team_members', icon: 'groups' },
   { name: 'pages', icon: 'web', singleton: true },
+  { name: 'branding_settings', icon: 'palette', singleton: true },
   { name: 'contact_messages', icon: 'mail' },
   { name: 'suggestions', icon: 'edit_note' },
   { name: 'translation_suggestions', icon: 'translate' },
@@ -204,6 +210,26 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'social_facebook', type: 'string' },
     { field: 'social_youtube', type: 'string' },
   ],
+  branding_settings: [
+    { field: 'id', type: 'integer' },
+    { field: 'logo', type: 'json' },
+    { field: 'primary_color', type: 'string' },
+    { field: 'secondary_color', type: 'string' },
+    { field: 'background_color', type: 'string' },
+    { field: 'text_color', type: 'string' },
+    { field: 'border_color', type: 'string' },
+    { field: 'published_logo', type: 'json' },
+    { field: 'published_primary_color', type: 'string' },
+    { field: 'published_secondary_color', type: 'string' },
+    { field: 'published_background_color', type: 'string' },
+    { field: 'published_text_color', type: 'string' },
+    { field: 'published_border_color', type: 'string' },
+    { field: 'previous_published_snapshot', type: 'json' },
+    { field: 'last_published_at', type: 'timestamp' },
+    { field: 'last_published_by', type: 'string' },
+    { field: 'last_reverted_at', type: 'timestamp' },
+    { field: 'last_reverted_by', type: 'string' },
+  ],
   contact_messages: [
     { field: 'id', type: 'string' },
     { field: 'name', type: 'string' },
@@ -270,6 +296,8 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
   ],
   ops_settings: [
     { field: 'id', type: 'integer' },
+    { field: 'branding_webhook_secret', type: 'string' },
+    { field: 'branding_site_base_url', type: 'string' },
     { field: 'notifications_enabled', type: 'boolean' },
     { field: 'notify_contact_enabled', type: 'boolean' },
     { field: 'notify_suggestions_enabled', type: 'boolean' },
@@ -626,6 +654,7 @@ async function ensurePublicPermissions(token: string): Promise<string> {
     'partners',
     'donation_tiers',
     'pages',
+    'branding_settings',
     'team_members',
     'search_facets',
   ]) {
@@ -653,6 +682,7 @@ async function ensureStaffPermissions(token: string) {
     'donation_tiers',
     'team_members',
     'pages',
+    'branding_settings',
     'search_facets',
     'suggestions',
     'translation_suggestions',
@@ -792,6 +822,161 @@ function normalizeDocument(doc: (typeof mockDocuments)[number]): DirectusItem {
   };
 }
 
+const BRANDING_OUTBOUND_FLOW_SPECS: ReadonlyArray<{ name: string; description: string; path: string; reqOpKey: string }> =
+  [
+    {
+      name: 'Roufouf: Publish branding to website',
+      description:
+        'Loads Ops Settings, then POSTs publish-branding on the Next.js app. Secrets and URL come from the database (synced every run). Trigger from Branding Settings.',
+      path: '/api/admin/publish-branding',
+      reqOpKey: 'rq_site_publish_branding',
+    },
+    {
+      name: 'Roufouf: Revert branding',
+      description:
+        'Loads Ops Settings, then POSTs revert-branding. Same headers as publish.',
+      path: '/api/admin/revert-branding',
+      reqOpKey: 'rq_site_revert_branding',
+    },
+    {
+      name: 'Roufouf: Revalidate branding cache',
+      description:
+        'Loads Ops Settings, then clears Next.js ISR for layouts only (after you changed published_* inside Directus).',
+      path: '/api/admin/revalidate-branding',
+      reqOpKey: 'rq_site_revalidate_branding',
+    },
+  ];
+
+async function flowIdByExactName(token: string, name: string): Promise<string | null> {
+  const qs = `filter[name][_eq]=${encodeURIComponent(name)}&limit=1&fields=id`;
+  const res = await directusRequest<{ data: Array<{ id: string }> }>(`/flows?${qs}`, 'GET', token);
+  const id = res?.data?.[0]?.id;
+  return typeof id === 'string' ? id : null;
+}
+
+async function createOutboundBrandingFlow(
+  token: string,
+  spec: { name: string; description: string; path: string; reqOpKey: string },
+) {
+  const existingFlow = await flowIdByExactName(token, spec.name);
+  if (existingFlow) return;
+
+  let flowId: string | undefined;
+  let manualNeedsUiTweak = false;
+  try {
+    const flowResPrimary = await directusRequest<{ data: { id: string } }>('/flows', 'POST', token, {
+      name: spec.name,
+      description: spec.description,
+      icon: 'published_with_changes',
+      color: null,
+      status: 'active',
+      accountability: '$trigger',
+      trigger: 'manual',
+      options: {
+        collections: ['branding_settings'],
+        location: ['item'],
+        async: false,
+      },
+    });
+    flowId = flowResPrimary?.data?.id;
+  } catch (primaryErr) {
+    console.warn(`[seed] flow "${spec.name}" with manual scopes failed — retry minimal trigger:`, primaryErr);
+    const flowResFallback = await directusRequest<{ data: { id: string } }>('/flows', 'POST', token, {
+      name: spec.name,
+      description: spec.description,
+      icon: 'published_with_changes',
+      color: null,
+      status: 'active',
+      accountability: '$trigger',
+      trigger: 'manual',
+      options: {},
+    });
+    flowId = flowResFallback?.data?.id;
+    manualNeedsUiTweak = true;
+  }
+  if (!flowId) throw new Error(`could not create flow record for ${spec.name}`);
+
+  await wireBrandingFlowOperations(token, flowId, spec);
+  console.log(
+    manualNeedsUiTweak
+      ? `+ flow ${spec.name} — open the manual trigger in Flows and attach it to Branding Settings if needed`
+      : `+ flow ${spec.name}`,
+  );
+}
+
+async function wireBrandingFlowOperations(
+  token: string,
+  flowId: string | undefined,
+  spec: { path: string; reqOpKey: string; name: string },
+) {
+  if (!flowId) throw new Error(`Missing flow id for ${spec.name}`);
+
+  const readRes = await directusRequest<{ data: { id: string } }>('/operations', 'POST', token, {
+    flow: flowId,
+    name: 'Read Ops Settings',
+    key: 'read_ops',
+    type: 'item-read',
+    position_x: 19,
+    position_y: 19,
+    options: {
+      collection: 'ops_settings',
+      key: 1,
+      query: { fields: ['branding_webhook_secret', 'branding_site_base_url'] },
+      emitEvents: false,
+      permissions: '$full',
+    },
+    resolve: null,
+    reject: null,
+  });
+  const readId = readRes?.data?.id;
+  if (!readId) throw new Error(`item-read op failed (${spec.name})`);
+
+  const reqRes = await directusRequest<{ data: { id: string } }>('/operations', 'POST', token, {
+    flow: flowId,
+    name: 'POST Next.js branding route',
+    key: spec.reqOpKey,
+    type: 'request',
+    position_x: 37,
+    position_y: 19,
+    options: {
+      method: 'POST',
+      url: `{{ read_ops.branding_site_base_url }}${spec.path}`,
+      headers: [{ header: 'x-branding-secret', value: '{{ read_ops.branding_webhook_secret }}' }],
+      body: {},
+    },
+    resolve: null,
+    reject: null,
+  });
+  const reqId = reqRes?.data?.id;
+  if (!reqId) throw new Error(`request op failed (${spec.name})`);
+
+  await directusRequest(`/operations/${encodeURIComponent(readId)}`, 'PATCH', token, { resolve: reqId });
+  await directusRequest(`/flows/${encodeURIComponent(flowId)}`, 'PATCH', token, { operation: readId });
+}
+
+async function ensureBrandingWebhookFlows(token: string): Promise<void> {
+  const skip = process.env.SKIP_BRANDING_FLOW_SEED;
+  if (skip === '1' || skip === 'true') {
+    console.log('(skip) SKIP_BRANDING_FLOW_SEED set');
+    return;
+  }
+
+  let anyFailed = false;
+  for (const spec of BRANDING_OUTBOUND_FLOW_SPECS) {
+    try {
+      await createOutboundBrandingFlow(token, spec);
+    } catch (err) {
+      anyFailed = true;
+      console.warn(`[seed] could not create flow "${spec.name}":`, err);
+    }
+  }
+  if (anyFailed) {
+    console.warn(
+      '[seed] Create the three branding flows manually: Read ops_settings → Request URL using {{ read_ops.*}} templates (see docs/ADMIN_GUIDE.md).',
+    );
+  }
+}
+
 async function seedData(token: string) {
   for (const t of mockThemes) await upsertItem(token, 'themes', t as unknown as DirectusItem);
   for (const t of mockDocumentTypes) await upsertItem(token, 'document_types', t as unknown as DirectusItem);
@@ -867,8 +1052,30 @@ async function seedData(token: string) {
     });
   }
   await upsertItem(token, 'pages', { id: 1, ...mockPages });
+  await upsertItem(token, 'branding_settings', {
+    id: 1,
+    logo: null,
+    primary_color: '#1B3F6E',
+    secondary_color: '#C9952A',
+    background_color: '#F7F5F0',
+    text_color: '#1A1A1A',
+    border_color: '#E4E0D6',
+    published_logo: null,
+    published_primary_color: '#1B3F6E',
+    published_secondary_color: '#C9952A',
+    published_background_color: '#F7F5F0',
+    published_text_color: '#1A1A1A',
+    published_border_color: '#E4E0D6',
+    previous_published_snapshot: null,
+    last_published_at: null,
+    last_published_by: null,
+    last_reverted_at: null,
+    last_reverted_by: null,
+  });
   await upsertItem(token, 'ops_settings', {
     id: 1,
+    branding_webhook_secret: null,
+    branding_site_base_url: defaultBrandingSiteBaseUrl(),
     notifications_enabled: false,
     notify_contact_enabled: true,
     notify_suggestions_enabled: true,
@@ -1014,6 +1221,7 @@ async function main() {
   await ensureOpsDashboard(adminToken);
   const publicToken = await ensurePublicToken(adminToken, publicRole);
   await seedData(adminToken);
+  await ensureBrandingWebhookFlows(adminToken);
   await attachFixtureSamplePdf(adminToken);
   await configureMeili();
 

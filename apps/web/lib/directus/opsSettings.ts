@@ -65,11 +65,28 @@ function parseEmails(value: unknown): string[] {
 
 let inFlightSettings: Promise<OpsSettings> | null = null;
 
+/** Public / site-token reads must not pull server-only webhook secrets. */
+const OPS_SETTINGS_PUBLIC_FIELDS = [
+  'notifications_enabled',
+  'notify_contact_enabled',
+  'notify_suggestions_enabled',
+  'notify_submissions_enabled',
+  'notify_to_emails',
+  'backup_enabled',
+  'backup_interval_hours',
+  'backup_retention_days_local',
+  'backup_s3_enabled',
+  'backup_s3_prefix',
+  'backup_pause_until',
+].join(',');
+
 async function fetchOpsSettings(): Promise<OpsSettings> {
   const fallback = defaultOpsSettingsFromEnv();
   if (isMockMode()) return fallback;
   try {
-    const row = await directusGetSingleton<Record<string, unknown>>('ops_settings');
+    const row = await directusGetSingleton<Record<string, unknown>>('ops_settings', {
+      fields: OPS_SETTINGS_PUBLIC_FIELDS,
+    });
     if (!row) return fallback;
     return {
       notifications_enabled: typeof row.notifications_enabled === 'boolean' ? row.notifications_enabled : fallback.notifications_enabled,
