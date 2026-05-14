@@ -186,6 +186,14 @@ function parseFiles(raw: unknown, documentId: string): Document['files'] {
           o.optimization_error === null ? null : typeof o.optimization_error === 'string' ? o.optimization_error : undefined,
         optimized_at:
           typeof o.optimized_at === 'string' ? o.optimized_at : o.optimized_at === null ? null : undefined,
+        zenodo_file_url:
+          typeof o.zenodo_file_url === 'string' && o.zenodo_file_url.trim() ? o.zenodo_file_url.trim() : null,
+        zenodo_file_key:
+          typeof o.zenodo_file_key === 'string' && o.zenodo_file_key.trim() ? o.zenodo_file_key.trim() : null,
+        zenodo_file_checksum:
+          typeof o.zenodo_file_checksum === 'string' && o.zenodo_file_checksum.trim()
+            ? o.zenodo_file_checksum.trim()
+            : null,
         kind,
         label_ar: typeof o.label_ar === 'string' ? o.label_ar : undefined,
         label_fr: typeof o.label_fr === 'string' ? o.label_fr : undefined,
@@ -230,6 +238,42 @@ export function mapDirectusDocumentRow(row: Record<string, unknown>, c: Directus
     keywords,
     source_url:
       typeof row.source_url === 'string' && row.source_url.trim() ? row.source_url.trim() : undefined,
+    zenodo_doi: typeof row.zenodo_doi === 'string' && row.zenodo_doi.trim() ? row.zenodo_doi.trim() : null,
+    zenodo_record_id:
+      typeof row.zenodo_record_id === 'string' && row.zenodo_record_id.trim() ? row.zenodo_record_id.trim() : null,
+    zenodo_concept_recid:
+      typeof row.zenodo_concept_recid === 'string' && row.zenodo_concept_recid.trim()
+        ? row.zenodo_concept_recid.trim()
+        : null,
+    zenodo_record_url:
+      typeof row.zenodo_record_url === 'string' && row.zenodo_record_url.trim() ? row.zenodo_record_url.trim() : null,
+    zenodo_deposition_id:
+      typeof row.zenodo_deposition_id === 'string' && row.zenodo_deposition_id.trim()
+        ? row.zenodo_deposition_id.trim()
+        : null,
+    zenodo_sync_status:
+      row.zenodo_sync_status === 'draft' ||
+      row.zenodo_sync_status === 'uploading' ||
+      row.zenodo_sync_status === 'published' ||
+      row.zenodo_sync_status === 'failed' ||
+      row.zenodo_sync_status === 'paused' ||
+      row.zenodo_sync_status === 'not_synced'
+        ? row.zenodo_sync_status
+        : 'not_synced',
+    zenodo_synced_at:
+      typeof row.zenodo_synced_at === 'string' ? row.zenodo_synced_at : row.zenodo_synced_at === null ? null : undefined,
+    zenodo_metadata_synced_at:
+      typeof row.zenodo_metadata_synced_at === 'string'
+        ? row.zenodo_metadata_synced_at
+        : row.zenodo_metadata_synced_at === null
+          ? null
+          : undefined,
+    zenodo_metadata_hash:
+      typeof row.zenodo_metadata_hash === 'string' && row.zenodo_metadata_hash.trim()
+        ? row.zenodo_metadata_hash.trim()
+        : null,
+    zenodo_sync_error:
+      row.zenodo_sync_error === null ? null : typeof row.zenodo_sync_error === 'string' ? row.zenodo_sync_error : undefined,
     supersedes: null,
     superseded_by: null,
     files: parseFiles(row.files, id),

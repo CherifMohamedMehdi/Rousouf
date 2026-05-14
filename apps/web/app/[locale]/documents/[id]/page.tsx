@@ -25,6 +25,7 @@ import type { Metadata } from 'next';
 
 import { getDocumentById, getRelatedByOrganization, getRelatedByTheme } from '@/lib/directus/documents';
 import { resolvePublicPdfFile } from '@/lib/pdf/resolvePublicPdfFile';
+import { getOpsSettings } from '@/lib/directus/opsSettings';
 import { getLanguages } from '@/lib/directus/taxonomies';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { pickLabel, pickLocalizedAbstract, pickLocalizedName, suggestableAbstractField } from '@/lib/i18n/taxonomy';
@@ -82,12 +83,12 @@ export default async function DocumentPage({
   const doc = await getDocumentById(id);
   if (!doc) notFound();
 
-  const tDoc = await getTranslations('document');
+  const [tDoc, opsSettings] = await Promise.all([getTranslations('document'), getOpsSettings()]);
   const abstract = pickLocalizedAbstract(doc, locale);
   const abstractSuggest = suggestableAbstractField(doc, locale);
   const year = yearOf(doc.date_published);
   const mainFile = doc.files.find((f) => f.kind === 'main') ?? doc.files[0];
-  const mainPublicPdf = mainFile ? resolvePublicPdfFile(doc, mainFile) : null;
+  const mainPublicPdf = mainFile ? resolvePublicPdfFile(doc, mainFile, opsSettings.public_pdf_source) : null;
   const orgName = doc.organization ? pickLocalizedName(doc.organization, locale) : '';
 
   const [byOrg, byTheme, languages] = await Promise.all([
@@ -96,7 +97,7 @@ export default async function DocumentPage({
     getLanguages(),
   ]);
 
-  const jsonLd = documentJsonLd(doc, locale as Locale);
+  const jsonLd = documentJsonLd(doc, locale as Locale, opsSettings.public_pdf_source);
 
   return (
     <article className="print-page mx-auto max-w-6xl px-4 py-10">
@@ -182,8 +183,22 @@ export default async function DocumentPage({
             </p>
           </section>
 
-          {mainFile && mainPublicPdf ? (
+          {mainFile && mainPublicPdf?.embeddable ? (
             <PdfViewer fileUrl={mainPublicPdf.url} filename={mainPublicPdf.filename} title={doc.title} />
+          ) : null}
+          {mainFile && mainPublicPdf && !mainPublicPdf.embeddable ? (
+            <div className="rounded-xl border border-border bg-white p-5">
+              <p className="text-sm text-brand-ink-soft">{tDoc('zenodoPreviewUnavailable')}</p>
+              <a
+                href={mainPublicPdf.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
+              >
+                {tDoc('viewOnZenodo')}
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            </div>
           ) : null}
 
           <section aria-labelledby="metadata-heading">
@@ -290,6 +305,28 @@ export default async function DocumentPage({
               >
                 {doc.keywords?.length ? doc.keywords.join(', ') : '—'}
               </MetadataRow>
+              {doc.zenodo_doi ? (
+                <MetadataRow
+                  label={tDoc('doi')}
+                  targetType="document"
+                  targetId={doc.id}
+                  fieldName="zenodo_doi"
+                  currentValue={doc.zenodo_doi}
+                >
+                  {doc.zenodo_record_url ? (
+                    <a
+                      href={doc.zenodo_record_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-brand-blue"
+                    >
+                      {doc.zenodo_doi}
+                    </a>
+                  ) : (
+                    doc.zenodo_doi
+                  )}
+                </MetadataRow>
+              ) : null}
             </dl>
           </section>
 
@@ -318,26 +355,26 @@ export default async function DocumentPage({
             </div>
             <ul className="mt-3 space-y-2">
               {doc.files.map((f) => {
-                const pub = resolvePublicPdfFile(doc, f);
+                const pub = resolvePublicPdfFile(doc, f, opsSettings.public_pdf_source);
                 const labelFallback = pub.filename ?? f.file.filename;
                 return (
-                <li key={f.id}>
-                  <a
-                    href={pub.url}
-                    download
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white px-3 py-2 text-sm hover:border-brand-blue hover:text-brand-blue"
-                  >
-                    <span className="truncate">
-                      {(f.kind === 'main' && tDoc('mainFile')) ||
-                        (f.kind === 'executive_summary' && tDoc('executiveSummary')) ||
-                        (f.kind === 'annex' && tDoc('annex')) ||
-                        (f.kind === 'dataset' && tDoc('dataset')) ||
-                        labelFallback}
-                    </span>
-                    <Download size={14} aria-hidden="true" />
-                  </a>
-                </li>
-              );
+                  <li key={f.id}>
+                    <a
+                      href={pub.url}
+                      {...(pub.download ? { download: true } : { target: '_blank', rel: 'noopener noreferrer' })}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white px-3 py-2 text-sm hover:border-brand-blue hover:text-brand-blue"
+                    >
+                      <span className="truncate">
+                        {(f.kind === 'main' && tDoc('mainFile')) ||
+                          (f.kind === 'executive_summary' && tDoc('executiveSummary')) ||
+                          (f.kind === 'annex' && tDoc('annex')) ||
+                          (f.kind === 'dataset' && tDoc('dataset')) ||
+                          labelFallback}
+                      </span>
+                      {pub.download ? <Download size={14} aria-hidden="true" /> : <ArrowUpRight size={14} aria-hidden="true" />}
+                    </a>
+                  </li>
+                );
               })}
             </ul>
           </section>

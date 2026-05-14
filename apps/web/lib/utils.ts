@@ -34,6 +34,7 @@ export function siteUrl(): string {
 }
 
 export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
   return `${siteUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 }
 

@@ -2,14 +2,14 @@
  * Chicago (author-date / notes-and-bibliography hybrid) citation formatter.
  */
 import type { Document } from '@/types/directus';
-import { absoluteUrl } from '@/lib/utils';
+import { citationUrl } from './url';
 
 export function formatChicago(doc: Document): string {
   const author = formatAuthor(doc);
   const year = doc.date_published?.slice(0, 4) ?? 'n.d.';
   const title = doc.title?.trim() || '[Untitled]';
   const publisher = doc.organization?.name?.trim() || 'Roufouf';
-  const url = absoluteUrl(`/documents/${doc.id}`);
+  const url = citationUrl(doc);
   return `${author}. ${year}. *${title}*. ${publisher}. ${url}.`;
 }
 

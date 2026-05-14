@@ -7,14 +7,14 @@
  * - Missing publisher → uses the platform URL
  */
 import type { Document } from '@/types/directus';
-import { absoluteUrl } from '@/lib/utils';
+import { citationUrl } from './url';
 
 export function formatApa(doc: Document): string {
   const author = formatAuthor(doc);
   const year = formatYear(doc.date_published);
   const title = doc.title?.trim() || '[Untitled]';
   const publisher = doc.organization?.name?.trim() || 'Roufouf';
-  const url = absoluteUrl(`/documents/${doc.id}`);
+  const url = citationUrl(doc);
   return `${author} (${year}). *${title}*. ${publisher}. ${url}`;
 }
 

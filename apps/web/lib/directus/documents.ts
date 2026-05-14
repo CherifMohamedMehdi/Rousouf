@@ -25,7 +25,7 @@ export type { DocumentQuery, PaginatedDocuments } from '@/types/documentQuery';
 
 /** Directus `fields` for list cards: omits heavy blobs (files, hashes, fingerprint). */
 export const DIRECTUS_DOCUMENT_FIELDS_LIST =
-  'id,title,author,organization,date_published,abstract_original,abstract_translations,language,themes,governorates,document_type,keywords,status,date_uploaded,date_created,date_updated,supersedes,superseded_by,source_url';
+  'id,title,author,organization,date_published,abstract_original,abstract_translations,language,themes,governorates,document_type,keywords,status,date_uploaded,date_created,date_updated,supersedes,superseded_by,source_url,zenodo_doi,zenodo_record_url,zenodo_sync_status';
 
 const DIRECTUS_LIST_CHUNK = 500;
 

@@ -2,14 +2,14 @@
  * MLA 9th-edition citation formatter.
  */
 import type { Document } from '@/types/directus';
-import { absoluteUrl } from '@/lib/utils';
+import { citationUrl } from './url';
 
 export function formatMla(doc: Document): string {
   const author = formatAuthor(doc);
   const title = doc.title?.trim() || '[Untitled]';
   const publisher = doc.organization?.name?.trim() || 'Roufouf';
   const year = doc.date_published?.slice(0, 4) ?? 'n.d.';
-  const url = absoluteUrl(`/documents/${doc.id}`);
+  const url = citationUrl(doc);
   return `${author}. *${title}*. ${publisher}, ${year}, ${url}.`;
 }
 

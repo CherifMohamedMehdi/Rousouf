@@ -37,13 +37,16 @@ role, and send them the invite email.
    - **Abstract translations** — optional: fill `ar`, `fr`, `en` in the JSON block
      for a localized abstract shown to each audience.
 3. Attach the PDF(s) on **`Documents → files`** (JSON array on the seeded stack):
-   - Each slot contains **`file`**: upload the publisher-original PDF (it becomes a normal **File Library** row).
+   - Each slot contains **`file`**: upload the publisher-original PDF (it becomes a normal **File Library** row and remains Roufouf’s local backup copy).
    - Optional **`optimized_file`** and **`optimization_*`** keys are maintained by **`pdf-optimize-worker`** (`docker-compose`); do not rename **`file`** when a derivative appears.
+   - **`zenodo_file_url`**, **`zenodo_file_key`**, and **`zenodo_file_checksum`** are filled automatically after the Zenodo sync runs.
    - Use **`pdf_public_display`** / **Public PDF display**: *Automatic (optimized when ready)* is the usual default — visitors switch to originals vs derivatives without losing either asset from **Files**.
    - Separate relational **`document_files`** exists in **`SCHEMA.md`** for normalized installs; Roufouf’s Docker seed uses **`files` JSON instead**, so edits happen in that editor.
 4. Leave **status = draft** while you're still checking. When done, change
    **status → published**.
 5. Click **Save**.
+
+When Zenodo storage is enabled, run the protected **Sync Zenodo** webhook/Flow for the document after publication (`POST /api/admin/sync-zenodo` with `{ "documentId": "..." }`). It creates or updates the Zenodo record using Roufouf metadata, then fills **DOI**, **Zenodo record URL**, and per-file Zenodo URLs back into the document. If **Ops Settings → Public PDF source** is set to **Directus local storage**, the sync is paused and visitors use the local Directus copy instead.
 
 > **Duplicate detection.** When a user submits a PDF through the website we
 > compute a SHA-256 hash and a content fingerprint and store them on the
@@ -328,6 +331,7 @@ editing project files.
 
 1. Sidebar → **Content → Ops Settings** (singleton).
 2. Use these fields:
+   - **public_pdf_source**: choose **Zenodo public files** for normal public delivery, or **Directus local storage** to immediately fall back to Roufouf’s local PDFs. Directus mode also pauses Zenodo deposits and metadata updates.
    - **notifications_enabled**: global on/off for email alerts.
    - **notify_contact_enabled** / **notify_suggestions_enabled** /
      **notify_submissions_enabled**: per-flow toggles.
@@ -338,7 +342,7 @@ editing project files.
    - **backup_retention_days_local**: local retention on backup volume.
    - **backup_s3_enabled** + **backup_s3_prefix**: off-site copy behavior.
    - **backup_pause_until**: temporary pause window.
-3. Save. The backup worker polls these settings and applies changes without code edits.
+3. Save. The website and workers poll these settings and apply changes without code edits.
 
 ### Trigger backup now
 

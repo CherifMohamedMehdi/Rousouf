@@ -2,7 +2,7 @@
  * schema.org JSON-LD builders. Each function returns a plain object; a
  * <JsonLd> client component serializes it into a <script> tag.
  */
-import type { Document, Organization } from '@/types/directus';
+import type { Document, Organization, PublicPdfSource } from '@/types/directus';
 import { resolvePublicPdfFile } from '@/lib/pdf/resolvePublicPdfFile';
 import type { Locale } from '@/lib/i18n/config';
 import { siteUrl, absoluteUrl } from '@/lib/utils';
@@ -48,7 +48,7 @@ export function organizationJsonLd(org: Organization, locale: Locale) {
   };
 }
 
-export function documentJsonLd(doc: Document, locale: Locale) {
+export function documentJsonLd(doc: Document, locale: Locale, pdfSource: PublicPdfSource = 'directus') {
   const abstract = pickLocalizedAbstract(doc, locale);
   const orgName = doc.organization ? pickLocalizedName(doc.organization, locale) : null;
   return {
@@ -69,12 +69,20 @@ export function documentJsonLd(doc: Document, locale: Locale) {
     datePublished: doc.date_published ?? undefined,
     inLanguage: doc.language?.slug,
     keywords: doc.keywords?.join(', '),
+    identifier: doc.zenodo_doi
+      ? {
+          '@type': 'PropertyValue',
+          propertyID: 'DOI',
+          value: doc.zenodo_doi,
+        }
+      : undefined,
+    sameAs: doc.zenodo_record_url ?? undefined,
     about: doc.themes?.map((t) => pickLocalizedName(t, locale)).filter(Boolean),
     url: absoluteUrl(`/${locale}/documents/${doc.id}`),
     encoding: doc.files?.length
       ? doc.files.map((f) => ({
           '@type': 'MediaObject',
-          contentUrl: absoluteUrl(resolvePublicPdfFile(doc, f).url),
+          contentUrl: absoluteUrl(resolvePublicPdfFile(doc, f, pdfSource).url),
           encodingFormat: 'application/pdf',
         }))
       : undefined,

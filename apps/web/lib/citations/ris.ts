@@ -3,7 +3,7 @@
  * reference managers recognize for policy briefs / research reports.
  */
 import type { Document } from '@/types/directus';
-import { absoluteUrl } from '@/lib/utils';
+import { citationUrl } from './url';
 
 export function formatRis(doc: Document): string {
   const lines: string[] = ['TY  - RPRT'];
@@ -21,7 +21,8 @@ export function formatRis(doc: Document): string {
   }
   if (doc.language?.name_en) lines.push(`LA  - ${doc.language.name_en}`);
   for (const kw of doc.keywords ?? []) lines.push(`KW  - ${kw}`);
-  lines.push(`UR  - ${absoluteUrl(`/documents/${doc.id}`)}`);
+  if (doc.zenodo_doi) lines.push(`DO  - ${doc.zenodo_doi}`);
+  lines.push(`UR  - ${citationUrl(doc)}`);
   lines.push('ER  - ');
   return lines.join('\n');
 }

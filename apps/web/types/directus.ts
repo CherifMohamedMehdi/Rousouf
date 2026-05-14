@@ -26,6 +26,8 @@ export type ContactStatus = 'new' | 'read' | 'replied' | 'archived';
 export type LeadStatus = 'new' | 'contacted' | 'converted' | 'archived';
 export type DocumentFileKind = 'main' | 'executive_summary' | 'annex' | 'dataset';
 export type PdfPublicDisplayMode = 'auto' | 'original' | 'optimized';
+export type PublicPdfSource = 'zenodo' | 'directus';
+export type ZenodoSyncStatus = 'not_synced' | 'draft' | 'uploading' | 'published' | 'failed' | 'paused';
 export type DocumentFileOptimizationStatus =
   | 'pending'
   | 'processing'
@@ -113,6 +115,10 @@ export interface DocumentFile {
   optimization_status?: DocumentFileOptimizationStatus;
   optimization_error?: string | null;
   optimized_at?: ISODateTime | null;
+  /** Public Zenodo file URL, when this slot has been published there. */
+  zenodo_file_url?: string | null;
+  zenodo_file_key?: string | null;
+  zenodo_file_checksum?: string | null;
   label_ar?: string;
   label_fr?: string;
   label_en?: string;
@@ -139,6 +145,17 @@ export interface Document {
   keywords: string[];
   /** Canonical URL of the document on the publisher's site, when known. */
   source_url?: string | null;
+  /** DOI minted by Zenodo for the published record, e.g. 10.5281/zenodo.1234. */
+  zenodo_doi?: string | null;
+  zenodo_record_id?: string | null;
+  zenodo_concept_recid?: string | null;
+  zenodo_record_url?: string | null;
+  zenodo_deposition_id?: string | null;
+  zenodo_sync_status?: ZenodoSyncStatus;
+  zenodo_synced_at?: ISODateTime | null;
+  zenodo_metadata_synced_at?: ISODateTime | null;
+  zenodo_metadata_hash?: string | null;
+  zenodo_sync_error?: string | null;
   supersedes?: { id: ID; title: string } | null;
   superseded_by?: { id: ID; title: string } | null;
   files: DocumentFile[];

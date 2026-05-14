@@ -6,7 +6,7 @@
  * Mendeley in one click.
  */
 import type { Document } from '@/types/directus';
-import { absoluteUrl } from '@/lib/utils';
+import { citationUrl } from './url';
 
 export function formatBibtex(doc: Document): string {
   const key = bibKey(doc);
@@ -15,7 +15,7 @@ export function formatBibtex(doc: Document): string {
   const year = doc.date_published?.slice(0, 4) ?? '';
   const month = monthName(doc.date_published);
   const institution = escape(doc.organization?.name?.trim() || 'Roufouf');
-  const url = absoluteUrl(`/documents/${doc.id}`);
+  const url = citationUrl(doc);
   const keywords = doc.keywords?.length ? escape(doc.keywords.join(', ')) : '';
 
   const lines: string[] = [
@@ -26,6 +26,7 @@ export function formatBibtex(doc: Document): string {
   ];
   if (year) lines.push(`  year = {${year}},`);
   if (month) lines.push(`  month = {${month}},`);
+  if (doc.zenodo_doi) lines.push(`  doi = {${escape(doc.zenodo_doi)}},`);
   if (keywords) lines.push(`  keywords = {${keywords}},`);
   const original = doc.source_url?.trim();
   if (original) lines.push(`  howpublished = {\\url{${escape(original)}}},`);

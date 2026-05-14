@@ -23,8 +23,9 @@ Meilisearch server run separately on a VPS.
 | Storage | Directus built-in (S3-compatible) | One less moving part |
 | Hosting | Frontend on Vercel, everything else on one VPS | Keeps infra and bills minimal |
 
-See `docs/SCHEMA.md` for the complete data model and
-`docs/ADMIN_GUIDE.md` for editorial workflows.
+See `docs/SCHEMA.md` for the complete data model,
+`docs/ADMIN_GUIDE.md` for editorial workflows, and
+`docs/ZENODO.md` for optional Zenodo storage, sync API, and environment variables.
 
 ---
 

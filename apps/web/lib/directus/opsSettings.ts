@@ -1,5 +1,6 @@
 import { isMockMode } from './client';
 import { directusGetSingleton } from './http';
+import type { PublicPdfSource } from '@/types/directus';
 
 function envFlag(name: string, fallback: boolean): boolean {
   const raw = process.env[name];
@@ -21,6 +22,7 @@ function envEmails(name: string): string[] {
 }
 
 export type OpsSettings = {
+  public_pdf_source: PublicPdfSource;
   notifications_enabled: boolean;
   notify_contact_enabled: boolean;
   notify_suggestions_enabled: boolean;
@@ -36,6 +38,7 @@ export type OpsSettings = {
 
 export function defaultOpsSettingsFromEnv(): OpsSettings {
   return {
+    public_pdf_source: parsePublicPdfSource(process.env.PUBLIC_PDF_SOURCE),
     notifications_enabled: envFlag('NOTIFICATIONS_ENABLED', false),
     notify_contact_enabled: envFlag('NOTIFY_CONTACT_ENABLED', true),
     notify_suggestions_enabled: envFlag('NOTIFY_SUGGESTIONS_ENABLED', true),
@@ -48,6 +51,10 @@ export function defaultOpsSettingsFromEnv(): OpsSettings {
     backup_s3_prefix: process.env.BACKUP_S3_PREFIX ?? 'roufouf',
     backup_pause_until: null,
   };
+}
+
+function parsePublicPdfSource(value: unknown): PublicPdfSource {
+  return value === 'zenodo' || value === 'directus' ? value : 'directus';
 }
 
 function parseEmails(value: unknown): string[] {
@@ -67,6 +74,7 @@ let inFlightSettings: Promise<OpsSettings> | null = null;
 
 /** Public / site-token reads must not pull server-only webhook secrets. */
 const OPS_SETTINGS_PUBLIC_FIELDS = [
+  'public_pdf_source',
   'notifications_enabled',
   'notify_contact_enabled',
   'notify_suggestions_enabled',
@@ -84,11 +92,10 @@ async function fetchOpsSettings(): Promise<OpsSettings> {
   const fallback = defaultOpsSettingsFromEnv();
   if (isMockMode()) return fallback;
   try {
-    const row = await directusGetSingleton<Record<string, unknown>>('ops_settings', {
-      fields: OPS_SETTINGS_PUBLIC_FIELDS,
-    });
+    const row = await fetchOpsSettingsRow(OPS_SETTINGS_PUBLIC_FIELDS);
     if (!row) return fallback;
     return {
+      public_pdf_source: parsePublicPdfSource(row.public_pdf_source ?? fallback.public_pdf_source),
       notifications_enabled: typeof row.notifications_enabled === 'boolean' ? row.notifications_enabled : fallback.notifications_enabled,
       notify_contact_enabled:
         typeof row.notify_contact_enabled === 'boolean' ? row.notify_contact_enabled : fallback.notify_contact_enabled,
@@ -113,6 +120,22 @@ async function fetchOpsSettings(): Promise<OpsSettings> {
   } catch {
     return fallback;
   }
+}
+
+async function fetchOpsSettingsRow(fields: string): Promise<Record<string, unknown> | null> {
+  const base = process.env.DIRECTUS_URL?.replace(/\/$/, '');
+  const adminToken = process.env.DIRECTUS_ADMIN_TOKEN;
+  if (base && adminToken) {
+    const res = await fetch(`${base}/items/ops_settings?fields=${encodeURIComponent(fields)}`, {
+      headers: { authorization: `Bearer ${adminToken}` },
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { data?: Record<string, unknown> };
+      return json.data ?? null;
+    }
+  }
+  return directusGetSingleton<Record<string, unknown>>('ops_settings', { fields });
 }
 
 export async function getOpsSettings(): Promise<OpsSettings> {

@@ -100,6 +100,16 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'governorates', type: 'json' },
     { field: 'keywords', type: 'json' },
     { field: 'source_url', type: 'string' },
+    { field: 'zenodo_doi', type: 'string' },
+    { field: 'zenodo_record_id', type: 'string' },
+    { field: 'zenodo_concept_recid', type: 'string' },
+    { field: 'zenodo_record_url', type: 'string' },
+    { field: 'zenodo_deposition_id', type: 'string' },
+    { field: 'zenodo_sync_status', type: 'string' },
+    { field: 'zenodo_synced_at', type: 'timestamp' },
+    { field: 'zenodo_metadata_synced_at', type: 'timestamp' },
+    { field: 'zenodo_metadata_hash', type: 'string' },
+    { field: 'zenodo_sync_error', type: 'text' },
     { field: 'supersedes', type: 'json' },
     { field: 'superseded_by', type: 'json' },
     { field: 'files', type: 'json' },
@@ -298,6 +308,7 @@ const FIELD_DEFS: Record<string, Array<{ field: string; type: string }>> = {
     { field: 'id', type: 'integer' },
     { field: 'branding_webhook_secret', type: 'string' },
     { field: 'branding_site_base_url', type: 'string' },
+    { field: 'public_pdf_source', type: 'string' },
     { field: 'notifications_enabled', type: 'boolean' },
     { field: 'notify_contact_enabled', type: 'boolean' },
     { field: 'notify_suggestions_enabled', type: 'boolean' },
@@ -534,7 +545,7 @@ async function ensureDocumentsPdfOptimizationHints(token: string) {
     },
     body: JSON.stringify({
       meta: {
-        note: '`file` = publisher-original PDF (`directus_files`). `optimized_file` = worker derivative when present; `optimization_status` tracks the job.',
+        note: '`file` = local Directus/offline PDF. `optimized_file` = worker derivative. `zenodo_file_url`, `zenodo_file_key`, and `zenodo_file_checksum` are filled by the Zenodo sync job for public delivery.',
       },
     }),
   });
@@ -542,6 +553,83 @@ async function ensureDocumentsPdfOptimizationHints(token: string) {
     console.log('+ documents.files Directus field note');
   } else {
     console.warn('PATCH documents.files:', filesPatch.status, await filesPatch.text());
+  }
+
+  const zenodoStatusPatch = await fetch(`${DIRECTUS_URL}/fields/documents/zenodo_sync_status`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      meta: {
+        interface: 'select-dropdown',
+        width: 'half',
+        readonly: true,
+        options: {
+          choices: [
+            { text: 'Not synced', value: 'not_synced' },
+            { text: 'Draft created', value: 'draft' },
+            { text: 'Uploading', value: 'uploading' },
+            { text: 'Published', value: 'published' },
+            { text: 'Paused (Directus fallback)', value: 'paused' },
+            { text: 'Failed', value: 'failed' },
+          ],
+        },
+        note: 'Maintained by the Zenodo sync job. Directus remains the local backup copy.',
+      },
+      schema: { default_value: 'not_synced' },
+    }),
+  });
+  if (zenodoStatusPatch.ok) {
+    console.log('+ documents.zenodo_sync_status Directus hints');
+  } else {
+    console.warn('PATCH documents.zenodo_sync_status:', zenodoStatusPatch.status, await zenodoStatusPatch.text());
+  }
+
+  for (const field of ['zenodo_doi', 'zenodo_record_id', 'zenodo_record_url', 'zenodo_synced_at', 'zenodo_metadata_synced_at']) {
+    const res = await fetch(`${DIRECTUS_URL}/fields/documents/${field}`, {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        meta: {
+          readonly: true,
+          width: field === 'zenodo_doi' || field === 'zenodo_record_url' ? 'full' : 'half',
+          note: 'Automatically populated from Zenodo.',
+        },
+      }),
+    });
+    if (!res.ok) console.warn(`PATCH documents.${field}:`, res.status, await res.text());
+  }
+
+  const publicPdfSourcePatch = await fetch(`${DIRECTUS_URL}/fields/ops_settings/public_pdf_source`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      meta: {
+        interface: 'select-dropdown',
+        width: 'half',
+        options: {
+          choices: [
+            { text: 'Zenodo public files', value: 'zenodo' },
+            { text: 'Directus local storage', value: 'directus' },
+          ],
+        },
+        note: 'Site-wide PDF source. Directus mode also pauses Zenodo write/sync jobs.',
+      },
+      schema: { default_value: 'directus' },
+    }),
+  });
+  if (publicPdfSourcePatch.ok) {
+    console.log('+ ops_settings.public_pdf_source Directus hints');
+  } else {
+    console.warn('PATCH ops_settings.public_pdf_source:', publicPdfSourcePatch.status, await publicPdfSourcePatch.text());
   }
 }
 
@@ -1076,6 +1164,7 @@ async function seedData(token: string) {
     id: 1,
     branding_webhook_secret: null,
     branding_site_base_url: defaultBrandingSiteBaseUrl(),
+    public_pdf_source: 'directus',
     notifications_enabled: false,
     notify_contact_enabled: true,
     notify_suggestions_enabled: true,
